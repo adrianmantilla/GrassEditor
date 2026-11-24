@@ -15,11 +15,15 @@ Salidas:
 
 En modo automático, Maya con interfaz muestra el visor ligero y Maya sin
 interfaz (render por lotes, mayapy) da el render completo.
+
+Usa la API clásica de Maya (maya.OpenMaya / OpenMayaMPx): la API 2.0 de
+Maya 2026-2027 no tiene MFnArrayAttrsData, que es lo que lee el instanciador.
 """
 
 import json
 
-import maya.api.OpenMaya as om
+import maya.OpenMaya as om
+import maya.OpenMayaMPx as mpx
 
 from pradera import camara as cam
 from pradera import capa as cp
@@ -35,53 +39,67 @@ def _texto(datos, atributo):
 
 def _matriz(datos, atributo):
     m = datos.inputValue(atributo).asMatrix()
-    return [m.getElement(f, c) for f in range(4) for c in range(4)]
+    return [m(f, c) for f in range(4) for c in range(4)]
 
 
-def leer_suelo(objeto_malla, matriz):
-    """Suelo de reparto.py a partir de los datos de una malla de Maya (o None)."""
+def _suelo(objeto_malla, matriz):
+    """Suelo de reparto.py a partir del MObject de malla que llega al nodo (o None)."""
     if objeto_malla is None or objeto_malla.isNull():
         return None
     fn = om.MFnMesh(objeto_malla)
-    puntos = fn.getPoints(om.MSpace.kObject)
-    por_cara, vertices = fn.getTriangles()
+    puntos = om.MPointArray()
+    fn.getPoints(puntos, om.MSpace.kObject)
+    por_cara, vertices = om.MIntArray(), om.MIntArray()
+    fn.getTriangles(por_cara, vertices)
     caras = []
-    for cara, n in enumerate(por_cara):
-        caras.extend([cara] * n)
-    return reparto.Suelo([(p.x, p.y, p.z) for p in puntos], list(vertices), caras, matriz)
+    for cara in range(por_cara.length()):
+        caras.extend([cara] * por_cara[cara])
+    lista = [(puntos[i].x, puntos[i].y, puntos[i].z) for i in range(puntos.length())]
+    return reparto.Suelo(lista, [vertices[i] for i in range(vertices.length())], caras, matriz)
+
+
+def _llenar_vectores(arr, valores):
+    arr.setLength(len(valores))
+    V = om.MVector
+    for i, v in enumerate(valores):
+        arr.set(V(v[0], v[1], v[2]), i)
+
+
+def _llenar_numeros(arr, valores):
+    arr.setLength(len(valores))
+    for i, v in enumerate(valores):
+        arr.set(float(v), i)
 
 
 def datos_instanciador(salida):
     """MObject con los arrays que lee el instanciador de Maya."""
     fn = om.MFnArrayAttrsData()
     objeto = fn.create()
-    n = len(salida)
     posiciones = fn.vectorArray("position")
     giros = fn.vectorArray("rotation")
     escalas = fn.vectorArray("scale")
     indices = fn.doubleArray("objectIndex")
     ids = fn.doubleArray("id")
-    if n:
-        V = om.MVector
-        posiciones.copy(om.MVectorArray([V(*p) for p in salida.posiciones]))
-        giros.copy(om.MVectorArray([V(*g) for g in salida.giros]))
-        escalas.copy(om.MVectorArray([V(*e) for e in salida.escalas]))
-        indices.copy(om.MDoubleArray(list(salida.indices)))
-        ids.copy(om.MDoubleArray(list(salida.ids)))
+    if salida is not None and len(salida):
+        _llenar_vectores(posiciones, salida.posiciones)
+        _llenar_vectores(giros, salida.giros)
+        _llenar_vectores(escalas, salida.escalas)
+        _llenar_numeros(indices, salida.indices)
+        _llenar_numeros(ids, salida.ids)
     return objeto
 
 
-class NodoCapa(om.MPxNode):
+class NodoCapa(mpx.MPxNode):
 
     def __init__(self):
-        om.MPxNode.__init__(self)
+        mpx.MPxNode.__init__(self)
         self.motor = cp.Motor()
         self._catalogo_texto = None
         self._catalogo = tipos.Catalogo()
 
     @staticmethod
     def crear():
-        return NodoCapa()
+        return mpx.asMPxPtr(NodoCapa())
 
     def _catalogo_de(self, texto):
         if texto != self._catalogo_texto:
@@ -105,17 +123,18 @@ class NodoCapa(om.MPxNode):
         return om.MGlobal.mayaState() != om.MGlobal.kInteractive
 
     def compute(self, plug, datos):
-        if plug != NodoCapa.salida and plug != NodoCapa.informe:
-            return None
+        es_salida = plug == NodoCapa.salida
+        if not es_salida and not plug == NodoCapa.informe:
+            return om.kUnknownParameter
         try:
             malla = datos.inputValue(NodoCapa.suelo).asMesh()
-            suelo = leer_suelo(malla, _matriz(datos, NodoCapa.sueloMatriz))
+            suelo = _suelo(malla, _matriz(datos, NodoCapa.sueloMatriz))
             ajustes = cp.AjustesCapa.desde_json(_texto(datos, NodoCapa.ajustes))
             catalogo = self._catalogo_de(_texto(datos, NodoCapa.tipos))
             self.motor.preparar(suelo, ajustes, catalogo, _texto(datos, NodoCapa.mascara),
                                 _texto(datos, NodoCapa.horneado))
             camara = self._camara(datos)
-            if plug == NodoCapa.salida:
+            if es_salida:
                 salida = self.motor.salida(camara, self._en_render(datos))
                 datos.outputValue(NodoCapa.salida).setMObject(datos_instanciador(salida))
             else:
@@ -125,47 +144,47 @@ class NodoCapa(om.MPxNode):
                 datos.outputValue(NodoCapa.informe).setString(json.dumps(informe))
         except Exception as error:  # el nodo nunca debe tumbar Maya
             om.MGlobal.displayWarning("Pradera | {}: {}".format(self.name(), error))
-            if plug == NodoCapa.salida:
-                datos.outputValue(NodoCapa.salida).setMObject(om.MFnArrayAttrsData().create())
+            if es_salida:
+                datos.outputValue(NodoCapa.salida).setMObject(datos_instanciador(None))
             else:
                 datos.outputValue(NodoCapa.informe).setString("{}")
         datos.setClean(plug)
+        return None
 
     @staticmethod
     def inicializar():
         tA, nA, mA, eA = (om.MFnTypedAttribute(), om.MFnNumericAttribute(), om.MFnMatrixAttribute(),
                           om.MFnEnumAttribute())
-        vacio = om.MFnStringData().create("")
 
         def texto(largo, corto, guardar=True):
-            a = tA.create(largo, corto, om.MFnData.kString, vacio)
-            tA.storable = guardar
+            a = tA.create(largo, corto, om.MFnData.kString, om.MFnStringData().create(""))
+            tA.setStorable(guardar)
             return a
 
         NodoCapa.suelo = tA.create("suelo", "su", om.MFnData.kMesh)
-        tA.storable = False
+        tA.setStorable(False)
         NodoCapa.sueloMatriz = mA.create("sueloMatriz", "sm")
-        mA.storable = False
+        mA.setStorable(False)
         NodoCapa.tipos = texto("tipos", "ti", guardar=False)
         NodoCapa.ajustes = texto("ajustes", "aj")
         NodoCapa.mascara = texto("mascara", "ma")
         NodoCapa.horneado = texto("horneado", "ho")
         NodoCapa.camMatriz = mA.create("camMatriz", "cm")
-        mA.storable = False
+        mA.setStorable(False)
         NodoCapa.camFocal = nA.create("camFocal", "cf", om.MFnNumericData.kFloat, 35.0)
         NodoCapa.camApertura = nA.create("camApertura", "ca", om.MFnNumericData.kFloat, 1.417)
         NodoCapa.aspecto = nA.create("aspecto", "as", om.MFnNumericData.kFloat, 16.0 / 9.0)
         NodoCapa.conCamara = nA.create("conCamara", "cc", om.MFnNumericData.kBoolean, False)
         NodoCapa.enRender = nA.create("enRender", "er", om.MFnNumericData.kBoolean, False)
-        nA.storable = False
+        nA.setStorable(False)
         NodoCapa.modo = eA.create("modo", "mo", 0)
         for i, nombre in enumerate(("automatico", "visor", "render")):
             eA.addField(nombre, i)
         NodoCapa.salida = tA.create("salida", "sa", om.MFnData.kDynArrayAttrs)
-        tA.writable = False
-        tA.storable = False
+        tA.setWritable(False)
+        tA.setStorable(False)
         NodoCapa.informe = texto("informe", "in", guardar=False)
-        tA.writable = False
+        tA.setWritable(False)
 
         entradas = (NodoCapa.suelo, NodoCapa.sueloMatriz, NodoCapa.tipos, NodoCapa.ajustes, NodoCapa.mascara,
                     NodoCapa.horneado, NodoCapa.camMatriz, NodoCapa.camFocal, NodoCapa.camApertura,

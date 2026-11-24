@@ -11,26 +11,26 @@ Al cargarlo crea el menú Pradera; al descargarlo lo quita. El instalador lo
 marca para que se cargue solo cada vez que se abre Maya.
 """
 
-import maya.api.OpenMaya as om
+import maya.OpenMaya as om
+import maya.OpenMayaMPx as mpx
 from maya import cmds
 
+# API clásica (maya.OpenMaya): el nodo necesita MFnArrayAttrsData, que la API 2.0
+# no tiene, y en un mismo plugin no se pueden mezclar las dos.
 
-def maya_useNewAPI():
-    pass
 
-
-class ComandoAccion(om.MPxCommand):
+class ComandoAccion(mpx.MPxCommand):
     """praderaAccion <id>: ejecuta una acción de pradera.acciones con deshacer."""
 
     NOMBRE = "praderaAccion"
 
     def __init__(self):
-        om.MPxCommand.__init__(self)
+        mpx.MPxCommand.__init__(self)
         self.hacer = self.deshacer = None
 
     @staticmethod
     def crear():
-        return ComandoAccion()
+        return mpx.asMPxPtr(ComandoAccion())
 
     @staticmethod
     def sintaxis():
@@ -54,14 +54,14 @@ class ComandoAccion(om.MPxCommand):
         return True
 
 
-class ComandoRender(om.MPxCommand):
+class ComandoRender(mpx.MPxCommand):
     """praderaRender -antes | -despues: hierba de render o de visor."""
 
     NOMBRE = "praderaRender"
 
     @staticmethod
     def crear():
-        return ComandoRender()
+        return mpx.asMPxPtr(ComandoRender())
 
     @staticmethod
     def sintaxis():
@@ -82,7 +82,7 @@ class ComandoRender(om.MPxCommand):
 def initializePlugin(objeto):
     import pradera
     from pradera import nodo
-    plugin = om.MFnPlugin(objeto, "Pradera", pradera.__version__, "Any")
+    plugin = mpx.MFnPlugin(objeto, "Pradera", pradera.__version__, "Any")
     plugin.registerNode(nodo.NOMBRE, nodo.ID, nodo.NodoCapa.crear, nodo.NodoCapa.inicializar)
     plugin.registerCommand(ComandoAccion.NOMBRE, ComandoAccion.crear, ComandoAccion.sintaxis)
     plugin.registerCommand(ComandoRender.NOMBRE, ComandoRender.crear, ComandoRender.sintaxis)
@@ -91,12 +91,11 @@ def initializePlugin(objeto):
         cmds.evalDeferred(interfaz_maya.iniciar, lowestPriority=True)
     except Exception as error:
         cmds.warning("Pradera no se pudo cargar: {}".format(error))
-    return plugin
 
 
 def uninitializePlugin(objeto):
     from pradera import nodo
-    plugin = om.MFnPlugin(objeto)
+    plugin = mpx.MFnPlugin(objeto)
     plugin.deregisterCommand(ComandoRender.NOMBRE)
     plugin.deregisterCommand(ComandoAccion.NOMBRE)
     plugin.deregisterNode(nodo.ID)

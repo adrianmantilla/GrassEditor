@@ -29,22 +29,28 @@ def comprobar(condicion, texto):
         fallos.append(texto)
 
 
+def _instancer(instanciador):
+    # API clásica: la API 2.0 de Maya 2026-2027 no trae OpenMayaFX
+    import maya.OpenMaya as om1
+    import maya.OpenMayaFX as omfx1
+    sel = om1.MSelectionList()
+    sel.add(instanciador)
+    camino = om1.MDagPath()
+    sel.getDagPath(0, camino)
+    return omfx1.MFnInstancer(camino)
+
+
 def contar(instanciador):
     """Matas que pone el instanciador (lo que ve Maya, no lo que dice Pradera)."""
-    import maya.api.OpenMaya as om
-    import maya.api.OpenMayaFX as omfx
-    sel = om.MSelectionList()
-    sel.add(instanciador)
-    return omfx.MFnInstancer(sel.getDagPath(0)).particleCount()
+    return _instancer(instanciador).particleCount()
 
 
 def matriz_instancia(instanciador, i):
-    import maya.api.OpenMaya as om
-    import maya.api.OpenMayaFX as omfx
-    sel = om.MSelectionList()
-    sel.add(instanciador)
-    resultado = omfx.MFnInstancer(sel.getDagPath(0)).instancesForParticle(i)
-    return resultado[-1] if isinstance(resultado, tuple) else resultado
+    """Matriz de la mata ``i`` según el instanciador, como lista de 16 números."""
+    import maya.OpenMaya as om1
+    caminos, matriz = om1.MDagPathArray(), om1.MMatrix()
+    _instancer(instanciador).instancesForParticle(i, caminos, matriz)
+    return [matriz(f, c) for f in range(4) for c in range(4)]
 
 
 def main():
@@ -69,7 +75,6 @@ def main():
 
     from pradera import capa as cp
     from pradera import convertir, ejemplos, escena, interfaz_maya, pincel, tipos
-    from pradera.nodo import leer_suelo
 
     # --- fase 0: prototipos -------------------------------------------------------------
     rutas = escena.prototipos("silvestre")
@@ -105,16 +110,16 @@ def main():
 
     # La matriz de la primera mata debe coincidir con lo que calcula Pradera
     motor = cp.Motor()
-    s = leer_suelo(escena._objeto(escena.forma_suelo(capa)), cmds.getAttr(plano + ".worldMatrix[0]"))
+    s = escena.leer_suelo(escena.forma_suelo(capa), cmds.getAttr(plano + ".worldMatrix[0]"))
     motor.preparar(s, escena.ajustes(capa), escena.catalogo())
     salida = motor.salida(None, True)
     m = matriz_instancia(instancias, 0)
-    pos = (m.getElement(3, 0), m.getElement(3, 1), m.getElement(3, 2))
+    pos = tuple(m[12:15])
     esperado = salida.posiciones[0]
     comprobar(all(abs(a - b) < 0.01 for a, b in zip(pos, esperado)), "posición de la primera mata {} = {}"
               .format(tuple(round(v, 2) for v in pos), tuple(round(v, 2) for v in esperado)))
     import maya.api.OpenMaya as om
-    giro = om.MTransformationMatrix(m).rotation()
+    giro = om.MTransformationMatrix(om.MMatrix(m)).rotation()
     esperado_y = salida.giros[0][1]
     giro_y = math.degrees(giro.y) % 360
     comprobar(abs(((giro_y - esperado_y + 180) % 360) - 180) < 5 or abs(salida.giros[0][0]) > 8,

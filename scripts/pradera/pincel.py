@@ -44,9 +44,8 @@ def tocar_suelo(forma, origen, direccion):
 
 
 def _mascara_de(capa):
-    from pradera.nodo import leer_suelo
     forma = escena.forma_suelo(capa)
-    caja = leer_suelo(escena._objeto(forma), None).caja_local()
+    caja = escena.leer_suelo(forma, None).caja_local()
     texto = cmds.getAttr(capa + ".mascara") or ""
     mascara = Mascara.desde_texto(texto) if texto else None
     if mascara is None:

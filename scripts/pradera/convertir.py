@@ -20,7 +20,6 @@ import maya.api.OpenMaya as om
 from maya import cmds
 
 from pradera import escena, matas
-from pradera.nodo import leer_suelo
 from pradera.tipos import NIVELES, PROTOTIPOS_POR_TIPO
 
 AVISO_SUELTAS = 5000
@@ -34,7 +33,7 @@ def salida_render(capa):
     motor = cp.Motor()
     forma = escena.forma_suelo(capa)
     matriz = cmds.getAttr(forma + ".worldMatrix[0]")
-    suelo = leer_suelo(escena._objeto(forma), matriz)
+    suelo = escena.leer_suelo(forma, matriz)
     motor.preparar(suelo, escena.ajustes(capa), escena.catalogo(), cmds.getAttr(capa + ".mascara") or "",
                    cmds.getAttr(capa + ".horneado") or "")
     camara = None

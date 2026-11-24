@@ -66,6 +66,26 @@ def _camino(nombre):
     return sel.getDagPath(0)
 
 
+def leer_suelo(forma, matriz):
+    """Suelo de reparto.py a partir de la forma de malla ``forma`` (nombre), o None."""
+    if not forma:
+        return None
+    from pradera import reparto
+    fn = om.MFnMesh(_camino(forma))
+    puntos = fn.getPoints(om.MSpace.kObject)
+    por_cara, vertices = fn.getTriangles()
+    caras = []
+    for cara, n in enumerate(por_cara):
+        caras.extend([cara] * n)
+    return reparto.Suelo([(p.x, p.y, p.z) for p in puntos], list(vertices), caras, matriz)
+
+
+def _conectar(origen, destino):
+    """connectAttr sin el aviso «already connected» si el enlace ya existe."""
+    if not cmds.isConnected(origen, destino):
+        cmds.connectAttr(origen, destino, force=True)
+
+
 def _sin_deshacer(funcion):
     """Ejecuta ``funcion`` fuera de la cola de deshacer (para cosas internas como los prototipos)."""
     estado = cmds.undoInfo(query=True, stateWithoutFlush=True)
@@ -176,7 +196,7 @@ def asegurar_materiales():
         material = cmds.shadingNode("lambert", asShader=True, name=MATERIAL)
         cmds.setAttr(material + ".color", 0.25, 0.45, 0.15, type="double3")
         grupo = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=SG)
-        cmds.connectAttr(material + ".outColor", grupo + ".surfaceShader", force=True)
+        _conectar(material + ".outColor", grupo + ".surfaceShader")
     if _arnold():
         _materiales_arnold()
         fijar_material(material_actual())
@@ -190,8 +210,8 @@ def _materiales_arnold():
         dato = cmds.shadingNode("aiUserDataColor", asUtility=True, name=MATERIAL + "_color_ai")
         cmds.setAttr(dato + ".attribute", "colorSet1", type="string")
         cmds.setAttr(dato + ".default", 0.05, 0.2, 0.03, type="double3")
-        cmds.connectAttr(dato + ".outColor", hierba + ".baseColor", force=True)
-        cmds.connectAttr(dato + ".outColor", hierba + ".subsurfaceColor", force=True)
+        _conectar(dato + ".outColor", hierba + ".baseColor")
+        _conectar(dato + ".outColor", hierba + ".subsurfaceColor")
         for atributo, valor in (("base", 1.0), ("specular", 0.35), ("specularRoughness", 0.55),
                                 ("thinWalled", 1), ("subsurface", 0.35)):
             cmds.setAttr(hierba + "." + atributo, valor)
@@ -222,7 +242,7 @@ def fijar_material(material, translucidez=None):
     _materiales_arnold()
     if cmds.attributeQuery("aiSurfaceShader", node=SG, exists=True):
         origen = (MATERIAL + "_ai" if material == "hierba" else "pradera_clay_ai") + ".outColor"
-        cmds.connectAttr(origen, SG + ".aiSurfaceShader", force=True)
+        _conectar(origen, SG + ".aiSurfaceShader")
     cmds.setAttr(MATERIAL + "_ai.subsurface", float(cmds.getAttr(AJUSTES + ".translucidez")))
     for forma in cmds.ls("pradera_*_v*_n*Shape", type="mesh", long=True) or []:
         cmds.setAttr(forma + ".displayColors", 1 if material == "hierba" else 0)
@@ -456,8 +476,7 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
         cmds.setAttr(nodo + ".ajustes", aj.a_json(), type="string")
         if zona == "pincel":
             from pradera.mascara import Mascara
-            from pradera.nodo import leer_suelo
-            caja = leer_suelo(_malla_datos(forma), None).caja_local()
+            caja = leer_suelo(forma, None).caja_local()
             cmds.setAttr(nodo + ".mascara", Mascara(caja, 0).a_texto(), type="string")
         instancias = cmds.createNode("instancer", name=nombre + "_instancias", parent="|" + RAIZ)
         instancias = cmds.ls(instancias, long=True)[0]
@@ -473,10 +492,6 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
     finally:
         cmds.undoInfo(closeChunk=True)
     return nodo
-
-
-def _malla_datos(forma):
-    return _objeto(forma)
 
 
 def borrar_capa(capa):
@@ -523,9 +538,9 @@ def conectar_camara(capa, camara):
     if not forma:
         return False
     forma = forma[0]
-    cmds.connectAttr(forma + ".worldMatrix[0]", capa + ".camMatriz", force=True)
-    cmds.connectAttr(forma + ".focalLength", capa + ".camFocal", force=True)
-    cmds.connectAttr(forma + ".horizontalFilmAperture", capa + ".camApertura", force=True)
+    _conectar(forma + ".worldMatrix[0]", capa + ".camMatriz")
+    _conectar(forma + ".focalLength", capa + ".camFocal")
+    _conectar(forma + ".horizontalFilmAperture", capa + ".camApertura")
     cmds.setAttr(capa + ".conCamara", True)
     return True
 
@@ -632,9 +647,8 @@ def hornear(capa):
     from pradera import capa as modulo
     motor = modulo.Motor()
     forma = forma_suelo(capa)
-    from pradera.nodo import leer_suelo
     matriz = cmds.getAttr(forma + ".worldMatrix[0]") if forma else None
-    s = leer_suelo(_objeto(forma), matriz) if forma else None
+    s = leer_suelo(forma, matriz)
     motor.preparar(s, ajustes(capa), catalogo(), cmds.getAttr(capa + ".mascara") or "")
     texto = motor.horneado()
     cmds.setAttr(capa + ".horneado", texto, type="string")
