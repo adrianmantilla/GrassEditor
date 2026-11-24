@@ -133,12 +133,12 @@ def jardin_con_loma(nueva_escena=False):
         loma = escena.crear_capa(suelo, nombre="loma",
                                  mezcla=[["silvestre", 70], ["espigas", 20], ["flores", 10]],
                                  opciones=OPCIONES, densidad=100.0,
-                                 reglas={"pendiente_max": 38.0, "curvas": [camino, alrededor]})
+                                 reglas={"pendiente_max": 48.0, "curvas": [camino, alrededor]})
         cesped = escena.crear_capa(suelo, nombre="cesped", zona="pincel", mezcla=[["cesped", 85], ["trebol", 15]],
                                    opciones=OPCIONES, densidad=100.0, reglas={"curvas": [camino, alrededor]})
         delante = [(x, 0, z) for x in range(-1900, 300, 150) for z in range(450, 1250, 150)]
         pincel.pintar_en(cesped, delante, 220.0, "poner")
-        pincel.pintar_en(loma, delante, 200.0, "quitar", 0.9)
+        pincel.pintar_en(loma, delante, 220.0, "quitar", 1.0)
         dentro = dict(parterre, modo="dentro")
         flores = escena.crear_capa(suelo, nombre="parterre", mezcla=[["ornamental", 70], ["flores", 30]],
                                    opciones=OPCIONES, densidad=150.0, reglas={"curvas": [dentro]})   # parterre tupido
