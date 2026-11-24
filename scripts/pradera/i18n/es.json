@@ -244,5 +244,8 @@
  "uso_trebol": "Manchas dentro del césped, sombra",
  "ventana_titulo": "Pradera",
  "vista_render_no": "Visor ligero otra vez.",
- "vista_render_si": "Vista de render: el visor muestra toda la hierba del render."
+ "vista_render_si": "Vista de render: el visor muestra toda la hierba del render.",
+ "boton_tenir_suelo": "Teñir el suelo bajo la hierba",
+ "ayuda_boton_tenir_suelo": "Pone al suelo de la capa un material verde oscuro para que no se vea tierra entre las matas. Es un material normal: puedes cambiarlo o quitarlo.",
+ "estado_suelo_tenido": "Suelo «{suelo}» teñido de verde oscuro."
 }

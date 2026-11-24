@@ -20,7 +20,7 @@ import random
 
 from pradera.tipos import NIVELES, VARIANTES
 
-TRIANGULOS_TARJETA = 6
+TRIANGULOS_TARJETA = 18
 
 
 class Malla(object):
@@ -217,7 +217,11 @@ def mata(tipo, variante=0, nivel=0, semilla=0):
 
 
 def tarjeta(tipo, variante=0):
-    """Nivel lejano: dos tarjetas cruzadas, cada una con tres puntas (6 triángulos)."""
+    """Nivel lejano: dos tarjetas cruzadas con tres puntas dobladas cada una (18 triángulos).
+
+    Cada punta tiene un codo a media altura que se inclina hacia fuera, para
+    que de cerca no parezca un triángulo plano.
+    """
     brillo, calido = tono_variante(variante)
     raiz = _tono(tipo.color_raiz, brillo, calido)
     punta = _tono(tipo.color_punta, brillo, calido)
@@ -225,22 +229,36 @@ def tarjeta(tipo, variante=0):
         punta = _mezcla(punta, tipo.color_cabeza2 if (tipo.cabeza == "flor" and tipo.color_cabeza2
                                                      and variante >= VARIANTES // 2) else tipo.color_cabeza,
                         0.35)
+    medio_color = _mezcla(raiz, punta, 0.5)
     malla = Malla()
     ancho = max(tipo.radio * 2.0, tipo.altura * 0.35) * 1.1
     alto = tipo.altura
     giro = (variante * 0.61) % math.pi
+    caida = 0.12 + 0.35 * tipo.curvatura          # cuánto se inclina la punta (en fracción de la altura)
     for k in range(2):
         a = giro + k * math.pi / 2
-        ex, ez = math.cos(a), math.sin(a)
+        ex, ez = math.cos(a), math.sin(a)          # a lo ancho de la tarjeta
+        nx, nz = -ez, ex                           # perpendicular: hacia donde se dobla
         for j in range(3):
             u0, u1 = j / 3.0, (j + 1) / 3.0
             x0, x1 = (u0 - 0.5) * ancho, (u1 - 0.5) * ancho
-            xm = (x0 + x1) / 2 + (j - 1) * ancho * 0.05
+            xm = (x0 + x1) / 2 + (j - 1) * ancho * 0.08
             h = alto * (1.0 if j == 1 else 0.82)
+            lado = 1.0 if (j + k + variante) % 2 else -1.0
+            dobla = lado * caida * h
+            # codo a media altura: más estrecho y algo desplazado
+            c0 = x0 + (xm - x0) * 0.45
+            c1 = x1 + (xm - x1) * 0.45
+            hc = h * 0.55
+            dc = dobla * 0.3
             v0 = malla.vertice((ex * x0, 0.0, ez * x0), raiz, (u0, 0.0))
             v1 = malla.vertice((ex * x1, 0.0, ez * x1), raiz, (u1, 0.0))
-            v2 = malla.vertice((ex * xm, h, ez * xm), punta, ((u0 + u1) / 2, 1.0))
-            malla.triangulo(v0, v1, v2)
+            v2 = malla.vertice((ex * c0 + nx * dc, hc, ez * c0 + nz * dc), medio_color, (u0 + (u1 - u0) * 0.22, 0.55))
+            v3 = malla.vertice((ex * c1 + nx * dc, hc, ez * c1 + nz * dc), medio_color, (u1 - (u1 - u0) * 0.22, 0.55))
+            v4 = malla.vertice((ex * xm + nx * dobla, h * 0.95, ez * xm + nz * dobla), punta, ((u0 + u1) / 2, 1.0))
+            malla.triangulo(v0, v1, v3)
+            malla.triangulo(v0, v3, v2)
+            malla.triangulo(v2, v3, v4)
     return malla
 
 

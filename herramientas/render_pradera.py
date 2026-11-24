@@ -131,10 +131,11 @@ def ejemplo(cmds, carpeta, informe):
     from pradera import estadisticas as est
     cmds.file(new=True, force=True)
     _ajustes(cmds)
-    capas = ejemplos.jardin_con_loma()
-    _suelo_clay(cmds, "pradera_ejemplo_suelo")
+    capas = ejemplos.jardin_con_loma()   # ya tiñe el suelo de verde oscuro
     camara = "pradera_ejemplo_camara"
-    for nombre, optimizar in (("optimizado", True), ("sin_optimizar", False)):
+    # El optimizado se renderiza dos veces (al principio y al final) para que una
+    # racha de carga del ordenador no confunda la comparación de tiempos.
+    for nombre, optimizar in (("optimizado", True), ("sin_optimizar", False), ("optimizado_otra_vez", True)):
         for capa in capas:
             aj = escena.ajustes(capa)
             aj.opciones.update(recorte=optimizar, lod=optimizar, aclarar=optimizar)

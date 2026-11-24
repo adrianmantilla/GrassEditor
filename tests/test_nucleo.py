@@ -174,13 +174,13 @@ class Reparto(unittest.TestCase):
     def test_mezcla(self):
         cand = reparto.candidatos(self.suelo, [["silvestre", 50], ["flores", 50]], self.cat, 100.0, 1)
         n_flores = sum(1 for k in cand.tipo if cand.claves[k] == "flores")
-        # 50 m² × 30 + 50 m² × 6 = 1500 + 300
-        self.assertAlmostEqual(len(cand), 1800, delta=80)
-        self.assertAlmostEqual(n_flores, 300, delta=50)
+        # 50 m² × 60 + 50 m² × 20 = 3000 + 1000
+        self.assertAlmostEqual(len(cand), 4000, delta=120)
+        self.assertAlmostEqual(n_flores, 1000, delta=80)
         self.assertEqual(reparto.normalizar_mezcla([["a", 0], ["b", 2], ["b", 2]]), [("b", 1.0)])
 
     def test_esperadas_sin_generar(self):
-        self.assertAlmostEqual(reparto.esperadas(self.suelo, [["silvestre", 1]], self.cat), 3000, delta=1)
+        self.assertAlmostEqual(reparto.esperadas(self.suelo, [["silvestre", 1]], self.cat), 6000, delta=1)
 
     def test_semilla(self):
         a = reparto.candidatos(self.suelo, [["silvestre", 100]], self.cat, 100.0, 1)

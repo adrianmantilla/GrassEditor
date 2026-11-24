@@ -74,14 +74,15 @@ def main():
     print("  (Arnold cargado: {})".format(arnold))
 
     from pradera import capa as cp
-    from pradera import convertir, ejemplos, escena, interfaz_maya, pincel, tipos
+    from pradera import convertir, ejemplos, escena, interfaz_maya, matas, pincel, tipos
 
     # --- fase 0: prototipos -------------------------------------------------------------
     rutas = escena.prototipos("silvestre")
     comprobar(len(rutas) == 18, "18 prototipos de hierba silvestre")
     tris = cp.triangulos_tipo(tipos.SERIE["silvestre"])
     reales = [cmds.polyEvaluate(rutas[n], triangle=True) for n in range(3)]
-    comprobar(reales[2] == 6, "la tarjeta tiene 6 triángulos ({})".format(reales[2]))
+    comprobar(reales[2] == matas.TRIANGULOS_TARJETA, "la tarjeta tiene {} triángulos ({})".format(
+        matas.TRIANGULOS_TARJETA, reales[2]))
     comprobar(abs(reales[0] - tris[0]) <= tris[0] * 0.3, "mata completa con los triángulos previstos ({} ~ {})"
               .format(reales[0], tris[0]))
     forma = cmds.listRelatives(rutas[0], shapes=True, fullPath=True)[0]

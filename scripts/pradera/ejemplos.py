@@ -141,9 +141,10 @@ def jardin_con_loma(nueva_escena=False):
         pincel.pintar_en(loma, delante, 200.0, "quitar", 0.9)
         dentro = dict(parterre, modo="dentro")
         flores = escena.crear_capa(suelo, nombre="parterre", mezcla=[["ornamental", 70], ["flores", 30]],
-                                   opciones=OPCIONES, densidad=300.0, reglas={"curvas": [dentro]})   # parterre tupido
+                                   opciones=OPCIONES, densidad=150.0, reglas={"curvas": [dentro]})   # parterre tupido
         for capa in (loma, cesped, flores):
             escena.conectar_camara(capa, camara)
+        escena.tenir_suelo(suelo)
         cmds.select(clear=True)
     finally:
         cmds.undoInfo(closeChunk=True)

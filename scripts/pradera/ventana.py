@@ -323,10 +323,11 @@ class Ventana(QtWidgets.QDialog):
         self.material.addItem(t("material_clay"), "clay")
         self.material.setToolTip(t("ayuda_material"))
         self.material.activated.connect(lambda *_: self._material())
-        self.translucidez = self._numero(0, 1, 0.35, 0.05, 2, al_cambiar=self._material)
+        self.translucidez = self._numero(0, 1, 0.5, 0.05, 2, al_cambiar=self._material)
         self.translucidez.setToolTip(t("ayuda_translucidez"))
         c.addLayout(self._fila(self.material, t("etiqueta_translucidez"), self.translucidez))
         c.addWidget(QtWidgets.QLabel(t("material_nota")))
+        c.addWidget(self._boton("boton_tenir_suelo", self._tenir_suelo))
         capa.addWidget(caja)
         caja, c = self._grupo("grupo_convertir")
         c.addLayout(self._fila(self._boton("boton_sueltas", self._sueltas),
@@ -783,6 +784,15 @@ class Ventana(QtWidgets.QDialog):
         if self._cargando:
             return
         escena.fijar_material(self.material.currentData(), self.translucidez.value())
+
+    def _tenir_suelo(self):
+        capa = self.capa()
+        suelo = escena.suelo(capa) if capa else None
+        if not suelo:
+            cmds.warning(t("pincel_sin_suelo"))
+            return
+        escena.tenir_suelo(suelo)
+        self.mensaje(t("estado_suelo_tenido", suelo=suelo.split("|")[-1]))
 
     def _confirmar(self, clave, **valores):
         si, no = t("boton_si"), t("boton_no")

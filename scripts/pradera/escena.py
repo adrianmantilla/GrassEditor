@@ -120,7 +120,7 @@ def asegurar_ajustes():
         cmds.addAttr(AJUSTES, longName="enRender", attributeType="bool", defaultValue=False)
         cmds.addAttr(AJUSTES, longName="material", dataType="string")
         cmds.setAttr(AJUSTES + ".material", "hierba", type="string")
-        cmds.addAttr(AJUSTES, longName="translucidez", attributeType="double", defaultValue=0.35)
+        cmds.addAttr(AJUSTES, longName="translucidez", attributeType="double", defaultValue=0.5)
         cmds.addAttr(AJUSTES, longName="version", dataType="string")
     import pradera
     cmds.setAttr(AJUSTES + ".version", pradera.__version__, type="string")
@@ -212,9 +212,15 @@ def _materiales_arnold():
         cmds.setAttr(dato + ".default", 0.05, 0.2, 0.03, type="double3")
         _conectar(dato + ".outColor", hierba + ".baseColor")
         _conectar(dato + ".outColor", hierba + ".subsurfaceColor")
-        for atributo, valor in (("base", 1.0), ("specular", 0.35), ("specularRoughness", 0.55),
-                                ("thinWalled", 1), ("subsurface", 0.35)):
-            cmds.setAttr(hierba + "." + atributo, valor)
+        # Hoja fina: la luz la atraviesa (subsurface con thinWalled) y un poco de
+        # sheen da el brillo aterciopelado que tiene la hierba a contraluz.
+        for atributo, valor in (("base", 1.0), ("specular", 0.25), ("specularRoughness", 0.5),
+                                ("thinWalled", 1), ("subsurface", 0.5), ("sheen", 0.25),
+                                ("sheenRoughness", 0.4)):
+            if cmds.attributeQuery(atributo, node=hierba, exists=True):
+                cmds.setAttr(hierba + "." + atributo, valor)
+        if cmds.attributeQuery("sheenColor", node=hierba, exists=True):
+            cmds.setAttr(hierba + ".sheenColor", 0.75, 0.85, 0.55, type="double3")
     clay = "pradera_clay_ai"
     if not cmds.objExists(clay):
         clay = cmds.shadingNode("aiStandardSurface", asShader=True, name=clay)
@@ -222,6 +228,39 @@ def _materiales_arnold():
         cmds.setAttr(clay + ".specular", 0.2)
         cmds.setAttr(clay + ".specularRoughness", 0.6)
         cmds.setAttr(clay + ".thinWalled", 1)
+
+
+SUELO_MATERIAL = "pradera_suelo"
+SUELO_SG = "pradera_suelo_SG"
+COLOR_SUELO = (0.075, 0.095, 0.04)   # verde oscuro, casi tierra: disimula los huecos entre matas
+
+
+def tenir_suelo(suelo_tr, color=None):
+    """Asigna al suelo un material verde oscuro para que no se vea tierra entre las matas.
+
+    Es un material normal de Maya (y de Arnold si está cargado): se puede
+    cambiar o quitar como cualquier otro. Un paso de Ctrl+Z.
+    """
+    color = tuple(color or COLOR_SUELO)
+    cmds.undoInfo(openChunk=True, chunkName="Pradera_tenir_suelo")
+    try:
+        if not cmds.objExists(SUELO_SG):
+            lambert = cmds.shadingNode("lambert", asShader=True, name=SUELO_MATERIAL)
+            grupo = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=SUELO_SG)
+            _conectar(lambert + ".outColor", grupo + ".surfaceShader")
+        cmds.setAttr(SUELO_MATERIAL + ".color", *color, type="double3")
+        if _arnold() and cmds.attributeQuery("aiSurfaceShader", node=SUELO_SG, exists=True):
+            ai = SUELO_MATERIAL + "_ai"
+            if not cmds.objExists(ai):
+                ai = cmds.shadingNode("aiStandardSurface", asShader=True, name=ai)
+                cmds.setAttr(ai + ".specular", 0.1)
+                cmds.setAttr(ai + ".specularRoughness", 0.8)
+            cmds.setAttr(ai + ".baseColor", *color, type="double3")
+            _conectar(ai + ".outColor", SUELO_SG + ".aiSurfaceShader")
+        cmds.sets(suelo_tr, edit=True, forceElement=SUELO_SG)
+    finally:
+        cmds.undoInfo(closeChunk=True)
+    return SUELO_SG
 
 
 def material_actual():
