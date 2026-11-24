@@ -1,4 +1,4 @@
-"""Pruebas del núcleo de Pradera (Python puro, sin Maya).
+"""Pruebas del núcleo de GrassEditor (Python puro, sin Maya).
 
     python -m unittest discover -s tests -v
 """
@@ -14,11 +14,11 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(RAIZ, "scripts"))
 sys.path.insert(0, RAIZ)
 
-from pradera import camara as cam  # noqa: E402
-from pradera import capa as cp  # noqa: E402
-from pradera import estadisticas as est  # noqa: E402
-from pradera import matas, reparto, tipos  # noqa: E402
-from pradera.mascara import Mascara  # noqa: E402
+from grasseditor import camara as cam  # noqa: E402
+from grasseditor import capa as cp  # noqa: E402
+from grasseditor import estadisticas as est  # noqa: E402
+from grasseditor import matas, reparto, tipos  # noqa: E402
+from grasseditor.mascara import Mascara  # noqa: E402
 
 import instalar  # noqa: E402
 
@@ -463,11 +463,11 @@ class Capas(unittest.TestCase):
 
 class Textos(unittest.TestCase):
     def setUp(self):
-        with open(os.path.join(RAIZ, "scripts", "pradera", "i18n", "es.json"), encoding="utf-8") as f:
+        with open(os.path.join(RAIZ, "scripts", "grasseditor", "i18n", "es.json"), encoding="utf-8") as f:
             self.es = json.load(f)
 
     def _codigo(self):
-        carpeta = os.path.join(RAIZ, "scripts", "pradera")
+        carpeta = os.path.join(RAIZ, "scripts", "grasseditor")
         texto = ""
         for nombre in os.listdir(carpeta):
             if nombre.endswith(".py"):
@@ -500,7 +500,7 @@ class Textos(unittest.TestCase):
         self.assertEqual(faltan, [])
 
     def test_sin_vacios_y_formato(self):
-        from pradera.i18n import t
+        from grasseditor.i18n import t
         self.assertTrue(all(isinstance(v, str) and v.strip() for v in self.es.values()))
         self.assertEqual(t("capa_creada", capa="a", suelo="b"), "Capa a creada sobre b.")
         self.assertEqual(t("clave_que_no_existe"), "clave_que_no_existe")
@@ -508,19 +508,19 @@ class Textos(unittest.TestCase):
 
 class Instalacion(unittest.TestCase):
     def test_mod(self):
-        texto = instalar.contenido_mod("C:\\Users\\Ana\\Pradera", "1.0.0")
-        self.assertIn("+ Pradera 1.0.0 C:/Users/Ana/Pradera", texto)
+        texto = instalar.contenido_mod("C:\\Users\\Ana\\GrassEditor", "1.0.0")
+        self.assertIn("+ GrassEditor 1.0.0 C:/Users/Ana/GrassEditor", texto)
         self.assertIn("plug-ins: plug-ins", texto)
 
     def test_version(self):
-        import pradera
-        self.assertEqual(instalar._version(RAIZ), pradera.__version__)
+        import grasseditor
+        self.assertEqual(instalar._version(RAIZ), grasseditor.__version__)
 
     def test_ruta_mod_sin_tildes(self):
         modulos = "/Users/jose/Library/Preferences/Autodesk/maya/modules"
-        raiz = "/Users/jose/Descargas/Pradera año"
+        raiz = "/Users/jose/Descargas/GrassEditor año"
         self.assertEqual(instalar.ruta_para_mod(raiz, modulos), raiz)
-        self.assertEqual(instalar.ruta_para_mod("/Users/ana/Pradera", modulos), "/Users/ana/Pradera")
+        self.assertEqual(instalar.ruta_para_mod("/Users/ana/GrassEditor", modulos), "/Users/ana/GrassEditor")
 
     def test_compila_todo(self):
         """Todos los archivos de Python se pueden compilar (también los que necesitan Maya)."""

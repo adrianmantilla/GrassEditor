@@ -1,11 +1,11 @@
-"""Nodo «praderaCapa»: calcula las matas de una capa y se las da al instanciador.
+"""Nodo «grassEditorCapa»: calcula las matas de una capa y se las da al instanciador.
 
 Entradas (las conecta escena.py):
     suelo, sueloMatriz      la malla del suelo y su matriz de mundo
-    tipos                   el catálogo de tipos de la escena (del nodo pradera_ajustes)
+    tipos                   el catálogo de tipos de la escena (del nodo grasseditor_ajustes)
     ajustes, mascara        los de la capa (JSON y máscara pintada)
     camMatriz, camFocal, camApertura, aspecto, conCamara   la cámara de render
-    enRender                True mientras se renderiza (lo pone el comando praderaRender)
+    enRender                True mientras se renderiza (lo pone el comando grassEditorRender)
     modo                    0 automático, 1 siempre visor, 2 siempre render
     horneado                matas congeladas («Hornear»); vacío = se calculan
 
@@ -25,11 +25,11 @@ import json
 import maya.OpenMaya as om
 import maya.OpenMayaMPx as mpx
 
-from pradera import camara as cam
-from pradera import capa as cp
-from pradera import reparto, tipos
+from grasseditor import camara as cam
+from grasseditor import capa as cp
+from grasseditor import reparto, tipos
 
-NOMBRE = "praderaCapa"
+NOMBRE = "grassEditorCapa"
 ID = om.MTypeId(0x0007F2A1)   # rango de Autodesk para desarrollo local
 
 
@@ -145,7 +145,7 @@ class NodoCapa(mpx.MPxNode):
                 informe["aceptadas"] = informe.get("posibles", 0)
                 datos.outputValue(NodoCapa.informe).setString(json.dumps(informe))
         except Exception as error:  # el nodo nunca debe tumbar Maya
-            om.MGlobal.displayWarning("Pradera | {}: {}".format(self.name(), error))
+            om.MGlobal.displayWarning("GrassEditor | {}: {}".format(self.name(), error))
             if es_salida:
                 datos.outputValue(NodoCapa.salida).setMObject(datos_instanciador(None))
             else:

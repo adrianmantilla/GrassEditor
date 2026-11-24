@@ -18,7 +18,7 @@ Python puro: se prueba sin Maya.
 import math
 import random
 
-from pradera.tipos import NIVELES, VARIANTES
+from grasseditor.tipos import NIVELES, VARIANTES
 
 TRIANGULOS_TARJETA = 18
 

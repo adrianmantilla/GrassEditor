@@ -16,7 +16,7 @@ Python puro: se prueba sin Maya.
 import math
 from array import array
 
-from pradera.tipos import NIVELES, PROTOTIPOS_POR_TIPO
+from grasseditor.tipos import NIVELES, PROTOTIPOS_POR_TIPO
 
 CERCA_SIEMPRE = 150.0     # cm: lo que está junto a la cámara no se recorta (sombras, suelo a los pies)
 COMO = ("cajas", "tarjetas", "matas")

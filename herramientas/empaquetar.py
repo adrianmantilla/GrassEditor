@@ -2,7 +2,7 @@
 
     python3 herramientas/empaquetar.py [carpeta de salida]
 
-Deja Pradera-<versión>.zip con una carpeta «Pradera» dentro (instalar.py,
+Deja GrassEditor-<versión>.zip con una carpeta «GrassEditor» dentro (instalar.py,
 plug-ins, scripts, README.md, GUIA_ALUMNOS.md y LICENSE). Sin pruebas,
 herramientas ni cachés.
 """
@@ -17,7 +17,7 @@ INCLUIR = ("instalar.py", "README.md", "GUIA_ALUMNOS.md", "LICENSE", "plug-ins",
 
 
 def version():
-    with open(os.path.join(RAIZ, "scripts", "pradera", "__init__.py"), encoding="utf-8") as f:
+    with open(os.path.join(RAIZ, "scripts", "grasseditor", "__init__.py"), encoding="utf-8") as f:
         return re.search(r'__version__ = "([^"]+)"', f.read()).group(1)
 
 
@@ -36,10 +36,10 @@ def archivos():
 def main(*argumentos):
     salida = os.path.abspath(argumentos[0] if argumentos else os.path.join(RAIZ, "dist"))
     os.makedirs(salida, exist_ok=True)
-    destino = os.path.join(salida, "Pradera-{}.zip".format(version()))
+    destino = os.path.join(salida, "GrassEditor-{}.zip".format(version()))
     with zipfile.ZipFile(destino, "w", zipfile.ZIP_DEFLATED) as z:
         for ruta in archivos():
-            z.write(ruta, os.path.join("Pradera", os.path.relpath(ruta, RAIZ)))
+            z.write(ruta, os.path.join("GrassEditor", os.path.relpath(ruta, RAIZ)))
     print(destino)
     return destino
 

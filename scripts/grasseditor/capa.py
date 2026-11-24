@@ -16,10 +16,10 @@ import json
 import zlib
 from array import array
 
-from pradera import camara as cam
-from pradera import estadisticas as est
-from pradera import matas, reparto
-from pradera.mascara import Mascara
+from grasseditor import camara as cam
+from grasseditor import estadisticas as est
+from grasseditor import matas, reparto
+from grasseditor.mascara import Mascara
 
 
 class AjustesCapa(object):

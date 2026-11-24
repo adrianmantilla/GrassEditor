@@ -7,7 +7,7 @@ giro y escala. Sin instancias, cada triángulo de cada mata ocuparía memoria.
 Python puro: se prueba sin Maya.
 """
 
-from pradera.tipos import VARIANTES
+from grasseditor.tipos import VARIANTES
 
 BYTES_POR_MATA = 120        # matriz y datos de una instancia en Arnold, aprox.
 BYTES_POR_TRIANGULO = 45    # vértices, normales, UVs y colores, aprox.

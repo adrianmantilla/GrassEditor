@@ -1,18 +1,18 @@
-"""Menú de Pradera en la barra de Maya y comprobación de la instalación."""
+"""Menú de GrassEditor en la barra de Maya y comprobación de la instalación."""
 
 import platform
 
 from maya import cmds
 
-import pradera
-from pradera.i18n import t
+import grasseditor
+from grasseditor.i18n import t
 
-MENU = "PraderaMenu"
+MENU = "GrassEditorMenu"
 
 
 def comprobar(mostrar=True):
     """Devuelve (todo_bien, líneas) y, si ``mostrar``, las enseña en un diálogo."""
-    lineas, bien = [t("comprobar_version", version=pradera.__version__)], True
+    lineas, bien = [t("comprobar_version", version=grasseditor.__version__)], True
     version = cmds.about(version=True)
     sistema = "{} {}".format(platform.system(), platform.release())
     if any(v in version for v in ("2026", "2027")):
@@ -27,56 +27,56 @@ def comprobar(mostrar=True):
     except RuntimeError:
         lineas.append(t("comprobar_arnold_aviso"))
         bien = False
-    nodo = "praderaCapa" in (cmds.allNodeTypes() or [])
+    nodo = "grassEditorCapa" in (cmds.allNodeTypes() or [])
     lineas.append(t("comprobar_nodo_ok") if nodo else t("comprobar_nodo_aviso"))
     bien = bien and nodo
     lineas.append("")
     lineas.append(t("comprobar_ok") if bien else t("comprobar_avisos"))
     for linea in lineas:
-        print("Pradera | " + linea)
+        print("GrassEditor | " + linea)
     if mostrar:
         cmds.confirmDialog(title=t("comprobar_titulo"), message="\n".join(lineas), button=[t("boton_aceptar")])
     return bien, lineas
 
 
 def _ventana():
-    from pradera import ventana
+    from grasseditor import ventana
     return ventana.mostrar()
 
 
 def _nueva_capa(zona="objeto"):
-    from pradera import escena
+    from grasseditor import escena
     suelo, caras = escena.suelo_de_seleccion()
     if not suelo:
         cmds.warning(t("error_sin_malla"))
         return None
     capa = escena.crear_capa(suelo, caras, zona=zona)
-    print("Pradera | " + t("capa_creada", capa=capa, suelo=suelo.split("|")[-1]))
-    from pradera import ventana
+    print("GrassEditor | " + t("capa_creada", capa=capa, suelo=suelo.split("|")[-1]))
+    from grasseditor import ventana
     ventana.refrescar_si_abierta()
     return capa
 
 
 def _ejemplo():
-    from pradera import ejemplos
+    from grasseditor import ejemplos
     ejemplos.jardin_con_loma()
-    from pradera import ventana
+    from grasseditor import ventana
     ventana.mostrar()
 
 
 def _vista_render(activo):
-    from pradera import escena
+    from grasseditor import escena
     escena.fijar_render(bool(activo))
-    print("Pradera | " + t("vista_render_si" if activo else "vista_render_no"))
+    print("GrassEditor | " + t("vista_render_si" if activo else "vista_render_no"))
 
 
 def _analizar():
-    from pradera import ventana
+    from grasseditor import ventana
     ventana.mostrar()._analizar()
 
 
 def _acerca():
-    cmds.confirmDialog(title=t("menu_acerca"), message=t("acerca_texto", version=pradera.__version__),
+    cmds.confirmDialog(title=t("menu_acerca"), message=t("acerca_texto", version=grasseditor.__version__),
                        button=[t("boton_aceptar")])
 
 

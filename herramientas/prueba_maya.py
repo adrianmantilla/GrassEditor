@@ -1,4 +1,4 @@
-"""Prueba de Pradera dentro de Maya, sin interfaz (herramienta de desarrollo).
+"""Prueba de GrassEditor dentro de Maya, sin interfaz (herramienta de desarrollo).
 
 Desde la terminal, con el mayapy de cada versión:
 
@@ -41,7 +41,7 @@ def _instancer(instanciador):
 
 
 def contar(instanciador):
-    """Matas que pone el instanciador (lo que ve Maya, no lo que dice Pradera)."""
+    """Matas que pone el instanciador (lo que ve Maya, no lo que dice GrassEditor)."""
     return _instancer(instanciador).particleCount()
 
 
@@ -59,13 +59,13 @@ def main():
     from maya import cmds, mel
 
     print("Maya", cmds.about(version=True), "-", cmds.about(operatingSystem=True))
-    tmp = tempfile.mkdtemp(prefix="pradera_prueba_")
+    tmp = tempfile.mkdtemp(prefix="grasseditor_prueba_")
 
     # --- plugin -------------------------------------------------------------------------
-    cmds.loadPlugin(os.path.join(RAIZ, "plug-ins", "pradera_plugin.py"))
-    comprobar(cmds.pluginInfo("pradera_plugin", query=True, loaded=True), "el plugin se carga")
-    comprobar("praderaCapa" in cmds.allNodeTypes(), "nodo praderaCapa registrado")
-    comprobar(hasattr(cmds, "praderaAccion") and hasattr(cmds, "praderaRender"), "comandos registrados")
+    cmds.loadPlugin(os.path.join(RAIZ, "plug-ins", "grasseditor_plugin.py"))
+    comprobar(cmds.pluginInfo("grasseditor_plugin", query=True, loaded=True), "el plugin se carga")
+    comprobar("grassEditorCapa" in cmds.allNodeTypes(), "nodo grassEditorCapa registrado")
+    comprobar(hasattr(cmds, "grassEditorAccion") and hasattr(cmds, "grassEditorRender"), "comandos registrados")
     try:
         cmds.loadPlugin("mtoa", quiet=True)
     except RuntimeError:
@@ -73,8 +73,8 @@ def main():
     arnold = cmds.pluginInfo("mtoa", query=True, loaded=True)
     print("  (Arnold cargado: {})".format(arnold))
 
-    from pradera import capa as cp
-    from pradera import convertir, ejemplos, escena, interfaz_maya, matas, pincel, tipos
+    from grasseditor import capa as cp
+    from grasseditor import convertir, ejemplos, escena, interfaz_maya, matas, pincel, tipos
 
     # --- fase 0: prototipos -------------------------------------------------------------
     rutas = escena.prototipos("silvestre")
@@ -109,7 +109,7 @@ def main():
                  if cmds.attributeQuery(a, node=instancias, exists=True)]
     print("  (atributos del instanciador: {})".format(", ".join(atributos)))
 
-    # La matriz de la primera mata debe coincidir con lo que calcula Pradera
+    # La matriz de la primera mata debe coincidir con lo que calcula GrassEditor
     motor = cp.Motor()
     s = escena.leer_suelo(escena.forma_suelo(capa), cmds.getAttr(plano + ".worldMatrix[0]"))
     motor.preparar(s, escena.ajustes(capa), escena.catalogo())
@@ -135,13 +135,13 @@ def main():
 
     # Ganchos de render
     pre = cmds.getAttr("defaultRenderGlobals.preMel") or ""
-    comprobar("praderaRender -antes" in pre, "MEL de antes del render instalado")
+    comprobar("grassEditorRender -antes" in pre, "MEL de antes del render instalado")
     cmds.setAttr(capa + ".modo", 1)
     mel.eval(pre)
-    comprobar(escena.en_render(), "praderaRender -antes pone la hierba en calidad de render")
+    comprobar(escena.en_render(), "grassEditorRender -antes pone la hierba en calidad de render")
     comprobar(contar(instancias) == n, "durante el render salen todas las matas")
     mel.eval(cmds.getAttr("defaultRenderGlobals.postMel"))
-    comprobar(not escena.en_render(), "praderaRender -despues vuelve al visor")
+    comprobar(not escena.en_render(), "grassEditorRender -despues vuelve al visor")
     cmds.setAttr(capa + ".modo", 0)
 
     # Deshacer de los ajustes
@@ -221,7 +221,7 @@ def main():
     # --- fase 4: acabado ------------------------------------------------------------------
     escena.fijar_material("clay")
     if arnold:
-        comprobar("pradera_clay_ai" in (cmds.listConnections(escena.SG + ".aiSurfaceShader") or []), "material clay")
+        comprobar("grasseditor_clay_ai" in (cmds.listConnections(escena.SG + ".aiSurfaceShader") or []), "material clay")
     escena.fijar_material("hierba")
     ruta_csv = os.path.join(tmp, "puntos.csv")
     filas = convertir.exportar_puntos(capa, ruta_csv)

@@ -28,5 +28,5 @@ jobs:
         run: python3 herramientas/empaquetar.py dist
       - uses: actions/upload-artifact@v4
         with:
-          name: Pradera-para-alumnos
+          name: GrassEditor-para-alumnos
           path: dist/*.zip

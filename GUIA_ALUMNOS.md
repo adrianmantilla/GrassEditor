@@ -1,22 +1,22 @@
-# Pradera · Guía rápida
+# GrassEditor · Guía rápida
 
-Con Pradera cubres el suelo de hierba sin que Maya se vuelva lento. Tú dices dónde crece y qué
-tipos de hierba lleva; Pradera reparte las matas y se encarga de que el visor y el render vayan
+Con GrassEditor cubres el suelo de hierba sin que Maya se vuelva lento. Tú dices dónde crece y qué
+tipos de hierba lleva; GrassEditor reparte las matas y se encarga de que el visor y el render vayan
 rápidos.
 
 ## 1. Instalar (una vez)
 
-1. Descomprime el ZIP en una carpeta que no vayas a mover, por ejemplo `Documentos/Plugins/Pradera`.
+1. Descomprime el ZIP en una carpeta que no vayas a mover, por ejemplo `Documentos/Plugins/GrassEditor`.
 2. Abre Maya 2026 o 2027 y arrastra el archivo `instalar.py` hasta el visor.
 3. Si Maya pregunta por un plug-in no confiable («Untrusted Plugin Loading»), pulsa **Allow**.
 
-Aparece el menú **Pradera** en la barra de Maya.
+Aparece el menú **GrassEditor** en la barra de Maya.
 
 ## 2. Tu primera pradera en tres pasos
 
 1. Selecciona el suelo (o solo algunas caras).
-2. **Pradera › Hierba en la selección (todo el suelo)**.
-3. Abre **Pradera › Abrir Pradera…** y cambia la mezcla en la pestaña **2 · Hierba**.
+2. **GrassEditor › Hierba en la selección (todo el suelo)**.
+3. Abre **GrassEditor › Abrir GrassEditor…** y cambia la mezcla en la pestaña **2 · Hierba**.
 
 ¿Quieres pintar dónde crece? Usa **Hierba en la selección (para pintar)**: la capa empieza vacía
 y el pincel queda activo. Pinta en el visor sobre el suelo.
@@ -63,4 +63,4 @@ elegir la **cámara** con la que vas a renderizar.
   pendiente máxima no es muy baja.
 - **El visor va lento**: baja **Mostrar** al 5 % o pon **Como: Cajas**.
 - **En el render falta hierba en los bordes**: sube el **Margen** del recorte.
-- **Pradera › Comprobar instalación** dice qué falla.
+- **GrassEditor › Comprobar instalación** dice qué falla.

@@ -10,11 +10,11 @@ Modos: «poner», «quitar» y «suavizar». Con Ctrl pulsado, «poner» quita.
 import maya.api.OpenMaya as om
 from maya import cmds
 
-from pradera import escena
-from pradera.i18n import t
-from pradera.mascara import Mascara
+from grasseditor import escena
+from grasseditor.i18n import t
+from grasseditor.mascara import Mascara
 
-CONTEXTO = "praderaPincel"
+CONTEXTO = "grassEditorPincel"
 
 _estado = {"capa": None, "modo": "poner", "radio": 100.0, "fuerza": 0.6, "mascara": None, "original": "",
            "al_pintar": None, "forma": None, "contador": 0}
@@ -114,7 +114,7 @@ def _soltar():
         return
     final = e["mascara"].a_texto()
     escena._sin_deshacer(lambda: _escribir(e["original"]))
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_pincel")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_pincel")
     try:
         _escribir(final)
     finally:

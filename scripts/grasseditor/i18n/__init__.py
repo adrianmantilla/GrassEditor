@@ -2,7 +2,7 @@
 
 Cada idioma es un archivo JSON en esta carpeta (``es.json``, ``en.json``...).
 Si falta una clave en el idioma elegido, se usa el español.
-El idioma se elige con la variable de entorno ``PRADERA_IDIOMA``.
+El idioma se elige con la variable de entorno ``GRASSEDITOR_IDIOMA``.
 """
 
 import json
@@ -11,7 +11,7 @@ import os
 _CARPETA = os.path.dirname(os.path.abspath(__file__))
 IDIOMA_BASE = "es"
 _cache = {}
-_idioma = os.environ.get("PRADERA_IDIOMA", IDIOMA_BASE)
+_idioma = os.environ.get("GRASSEDITOR_IDIOMA", IDIOMA_BASE)
 
 
 def _cargar(idioma):

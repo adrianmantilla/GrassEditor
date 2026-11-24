@@ -1,12 +1,12 @@
 """Renders de comprobación con Arnold (herramienta de desarrollo).
 
-    mayapy herramientas/render_pradera.py /ruta/de/salida
+    mayapy herramientas/render_grasseditor.py /ruta/de/salida
 
 Deja en la carpeta:
 
-* pradera_tipos.png: lámina con los ocho tipos (un parche de cada uno);
-* pradera_niveles.png: un tipo en sus tres niveles de detalle, de cerca;
-* pradera_ejemplo_optimizado.png y pradera_ejemplo_sin_optimizar.png: la
+* grasseditor_tipos.png: lámina con los ocho tipos (un parche de cada uno);
+* grasseditor_niveles.png: un tipo en sus tres niveles de detalle, de cerca;
+* grasseditor_ejemplo_optimizado.png y grasseditor_ejemplo_sin_optimizar.png: la
   escena de ejemplo con y sin recorte, detalle por distancia y aclarado,
   con el tiempo de cada render y las cifras de cada capa en informe.txt.
 """
@@ -27,7 +27,7 @@ def _iniciar():
     from maya import cmds
     if not cmds.pluginInfo("mtoa", query=True, loaded=True):
         cmds.loadPlugin("mtoa")
-    cmds.loadPlugin(os.path.join(RAIZ, "plug-ins", "pradera_plugin.py"))
+    cmds.loadPlugin(os.path.join(RAIZ, "plug-ins", "grasseditor_plugin.py"))
     return cmds
 
 
@@ -92,7 +92,7 @@ def _suelo_clay(cmds, suelo):
 
 
 def lamina_tipos(cmds, carpeta, informe):
-    from pradera import escena, tipos
+    from grasseditor import escena, tipos
     cmds.file(new=True, force=True)
     _ajustes(cmds)
     _luces(cmds)
@@ -104,12 +104,12 @@ def lamina_tipos(cmds, carpeta, informe):
         _suelo_clay(cmds, suelo)
         escena.crear_capa(suelo, nombre=clave, mezcla=[[clave, 100]], densidad=100.0,
                           opciones={"recorte": False, "lod": False, "aclarar": False})
-    segundos, imagen = _render(cmds, os.path.join(carpeta, "pradera_tipos"), camara)
+    segundos, imagen = _render(cmds, os.path.join(carpeta, "grasseditor_tipos"), camara)
     informe.append("tipos: {:.1f} s {}".format(segundos, imagen))
 
 
 def niveles(cmds, carpeta, informe):
-    from pradera import escena
+    from grasseditor import escena
     cmds.file(new=True, force=True)
     _ajustes(cmds)
     _luces(cmds)
@@ -122,17 +122,17 @@ def niveles(cmds, carpeta, informe):
                                  opciones={"recorte": False, "lod": True, "cerca": 1e6 if i == 0 else 0.01,
                                            "medio": 1e6 if i < 2 else 0.02, "aclarar": False})
         escena.conectar_camara(capa, camara)
-    segundos, imagen = _render(cmds, os.path.join(carpeta, "pradera_niveles"), camara)
+    segundos, imagen = _render(cmds, os.path.join(carpeta, "grasseditor_niveles"), camara)
     informe.append("niveles: {:.1f} s {}".format(segundos, imagen))
 
 
 def ejemplo(cmds, carpeta, informe):
-    from pradera import ejemplos, escena
-    from pradera import estadisticas as est
+    from grasseditor import ejemplos, escena
+    from grasseditor import estadisticas as est
     cmds.file(new=True, force=True)
     _ajustes(cmds)
     capas = ejemplos.jardin_con_loma()   # ya tiñe el suelo de verde oscuro
-    camara = "pradera_ejemplo_camara"
+    camara = "grasseditor_ejemplo_camara"
     # El optimizado se renderiza dos veces (al principio y al final) para que una
     # racha de carga del ordenador no confunda la comparación de tiempos.
     for nombre, optimizar in (("optimizado", True), ("sin_optimizar", False), ("optimizado_otra_vez", True)):
@@ -141,7 +141,7 @@ def ejemplo(cmds, carpeta, informe):
             aj.opciones.update(recorte=optimizar, lod=optimizar, aclarar=optimizar)
             escena.guardar_ajustes(capa, aj)
         total = escena.informe_escena()
-        segundos, imagen = _render(cmds, os.path.join(carpeta, "pradera_ejemplo_" + nombre), camara)
+        segundos, imagen = _render(cmds, os.path.join(carpeta, "grasseditor_ejemplo_" + nombre), camara)
         informe.append("ejemplo {}: {:.1f} s, {} matas, {} triángulos, {} aprox. {}".format(
             nombre, segundos, est.miles(total.matas), est.corto(total.triangulos), est.bytes_legibles(total.memoria),
             imagen))

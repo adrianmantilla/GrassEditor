@@ -1,7 +1,7 @@
-"""Instalador de Pradera.
+"""Instalador de GrassEditor.
 
 Arrastra este archivo desde el explorador de archivos hasta el visor de Maya.
-Crea el módulo «pradera.mod» en tu carpeta de Maya apuntando a esta carpeta,
+Crea el módulo «grasseditor.mod» en tu carpeta de Maya apuntando a esta carpeta,
 carga el plugin y lo marca para que se cargue siempre. Para desinstalar, borra
 ese archivo .mod (la ruta se muestra en el Script Editor al instalar).
 
@@ -12,7 +12,7 @@ arrastrar este archivo.
 import os
 import sys
 
-PLUGIN = "pradera_plugin"
+PLUGIN = "grasseditor_plugin"
 
 
 def _raiz():
@@ -21,7 +21,7 @@ def _raiz():
 
 def contenido_mod(raiz, version):
     raiz = raiz.replace("\\", "/")
-    return ("+ Pradera {version} {raiz}\n"
+    return ("+ GrassEditor {version} {raiz}\n"
             "scripts: scripts\n"
             "plug-ins: plug-ins\n").format(version=version, raiz=raiz)
 
@@ -43,7 +43,7 @@ def ruta_para_mod(raiz, carpeta_modulos):
 
 
 def _version(raiz):
-    ruta = os.path.join(raiz, "scripts", "pradera", "__init__.py")
+    ruta = os.path.join(raiz, "scripts", "grasseditor", "__init__.py")
     with open(ruta, encoding="utf-8") as f:
         for linea in f:
             if linea.startswith("__version__"):
@@ -55,24 +55,24 @@ def instalar():
     from maya import cmds
 
     raiz = _raiz()
-    print("Pradera | instalando desde " + raiz)
+    print("GrassEditor | instalando desde " + raiz)
     version = _version(raiz)
     carpeta_modulos = os.path.join(cmds.internalVar(userAppDir=True), "modules")
     os.makedirs(carpeta_modulos, exist_ok=True)
-    ruta_mod = os.path.join(carpeta_modulos, "pradera.mod")
+    ruta_mod = os.path.join(carpeta_modulos, "grasseditor.mod")
     with open(ruta_mod, "w", encoding="utf-8") as f:
         f.write(contenido_mod(ruta_para_mod(raiz, carpeta_modulos), version))
-    print("Pradera | módulo escrito en " + ruta_mod)
+    print("GrassEditor | módulo escrito en " + ruta_mod)
 
     # Para esta sesión, sin reiniciar Maya. Se quitan del path otras copias
     # del plugin que se hubieran instalado antes en esta misma sesión.
     scripts = os.path.join(raiz, "scripts")
     sys.path[:] = [p for p in sys.path
                    if os.path.normpath(p) == os.path.normpath(scripts)
-                   or not os.path.isfile(os.path.join(p, "pradera", "__init__.py"))]
+                   or not os.path.isfile(os.path.join(p, "grasseditor", "__init__.py"))]
     if scripts not in sys.path:
         sys.path.insert(0, scripts)
-    for nombre in [m for m in sys.modules if m == "pradera" or m.startswith("pradera.")]:
+    for nombre in [m for m in sys.modules if m == "grasseditor" or m.startswith("grasseditor.")]:
         del sys.modules[nombre]
 
     ruta_plugin = os.path.join(raiz, "plug-ins", PLUGIN + ".py")
@@ -81,8 +81,8 @@ def instalar():
     cmds.loadPlugin(ruta_plugin)
     cmds.pluginInfo(PLUGIN, edit=True, autoload=True)
 
-    from pradera import interfaz_maya
-    from pradera.i18n import t
+    from grasseditor import interfaz_maya
+    from grasseditor.i18n import t
     interfaz_maya.crear_menu()
     cmds.confirmDialog(title=t("instalado_titulo"), message=t("instalado_texto", version=version),
                        button=[t("boton_aceptar")])
@@ -94,7 +94,7 @@ def onMayaDroppedPythonFile(*_):
         instalar()
     except Exception as error:
         from maya import cmds
-        cmds.confirmDialog(title="Pradera", message="No se pudo instalar Pradera: {}".format(error),
+        cmds.confirmDialog(title="GrassEditor", message="No se pudo instalar GrassEditor: {}".format(error),
                            button=["OK"])
         raise
     finally:

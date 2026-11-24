@@ -20,7 +20,7 @@ import math
 import random
 from array import array
 
-from pradera.tipos import VARIANTES
+from grasseditor.tipos import VARIANTES
 
 MAX_CANDIDATAS = 1500000
 _R2_A1 = 0.7548776662466927

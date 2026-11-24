@@ -1,13 +1,13 @@
-"""Todo lo que Pradera crea en la escena de Maya, y las funciones para manejarlo.
+"""Todo lo que GrassEditor crea en la escena de Maya, y las funciones para manejarlo.
 
 Estructura::
 
-    pradera                         grupo raíz
-      pradera_prototipos            oculto: las matas de cada tipo
-        pradera_<tipo>              6 variantes × 3 niveles: pradera_<tipo>_v0_n0 ...
+    grasseditor                         grupo raíz
+      grasseditor_prototipos            oculto: las matas de cada tipo
+        grasseditor_<tipo>              6 variantes × 3 niveles: grasseditor_<tipo>_v0_n0 ...
       <capa>_instancias             un instanciador por capa
-    pradera_ajustes   (network)     catálogo de tipos, material y «en render»
-    <capa>            (praderaCapa) el nodo de cada capa: ajustes, máscara, horneado
+    grasseditor_ajustes   (network)     catálogo de tipos, material y «en render»
+    <capa>            (grassEditorCapa) el nodo de cada capa: ajustes, máscara, horneado
 
 Los prototipos se comparten entre capas: si dos capas usan césped, el
 césped se guarda una vez. El índice de cada mata en el instanciador es
@@ -20,18 +20,18 @@ import math
 import maya.api.OpenMaya as om
 from maya import cmds
 
-from pradera import capa as cp
-from pradera import matas, tipos
-from pradera.i18n import t
-from pradera.tipos import NIVELES, VARIANTES
+from grasseditor import capa as cp
+from grasseditor import matas, tipos
+from grasseditor.i18n import t
+from grasseditor.tipos import NIVELES, VARIANTES
 
-RAIZ = "pradera"
-PROTOTIPOS = "pradera_prototipos"
-AJUSTES = "pradera_ajustes"
-TIPO_NODO = "praderaCapa"
-MATERIAL = "pradera_hierba"
-SG = "pradera_hierba_SG"
-ATRIBUTO_FIRMA = "praderaFirma"
+RAIZ = "grasseditor"
+PROTOTIPOS = "grasseditor_prototipos"
+AJUSTES = "grasseditor_ajustes"
+TIPO_NODO = "grassEditorCapa"
+MATERIAL = "grasseditor_hierba"
+SG = "grasseditor_hierba_SG"
+ATRIBUTO_FIRMA = "grassEditorFirma"
 ATRIBUTO_CANTERA = "canteraPieza"      # contrato con Cantera: sus piezas llevan este atributo
 ATRIBUTO_ARBOLES = "arbolesPlantado"   # copias plantadas con Árboles
 _BRILLO = 1.15
@@ -70,7 +70,7 @@ def leer_suelo(forma, matriz):
     """Suelo de reparto.py a partir de la forma de malla ``forma`` (nombre), o None."""
     if not forma:
         return None
-    from pradera import reparto
+    from grasseditor import reparto
     fn = om.MFnMesh(_camino(forma))
     puntos = fn.getPoints(om.MSpace.kObject)
     por_cara, vertices = fn.getTriangles()
@@ -97,7 +97,7 @@ def _sin_deshacer(funcion):
 
 
 def nombre_valido(nombre):
-    from pradera.tipos import clave_libre
+    from grasseditor.tipos import clave_libre
     return clave_libre(nombre, set())
 
 
@@ -122,8 +122,8 @@ def asegurar_ajustes():
         cmds.setAttr(AJUSTES + ".material", "hierba", type="string")
         cmds.addAttr(AJUSTES, longName="translucidez", attributeType="double", defaultValue=0.5)
         cmds.addAttr(AJUSTES, longName="version", dataType="string")
-    import pradera
-    cmds.setAttr(AJUSTES + ".version", pradera.__version__, type="string")
+    import grasseditor
+    cmds.setAttr(AJUSTES + ".version", grasseditor.__version__, type="string")
     return AJUSTES
 
 
@@ -161,15 +161,15 @@ def en_render():
     return cmds.objExists(AJUSTES) and bool(cmds.getAttr(AJUSTES + ".enRender"))
 
 
-_MEL_ANTES = "if (`exists praderaRender`) praderaRender -antes;"
-_MEL_DESPUES = "if (`exists praderaRender`) praderaRender -despues;"
+_MEL_ANTES = "if (`exists grassEditorRender`) grassEditorRender -antes;"
+_MEL_DESPUES = "if (`exists grassEditorRender`) grassEditorRender -despues;"
 
 
 def instalar_ganchos():
     """Añade a los MEL de antes y después del render el cambio a calidad de render.
 
     Se escriben con ``exists`` para que la escena se pueda renderizar en un
-    ordenador sin Pradera. No se borra lo que ya hubiera en esos campos.
+    ordenador sin GrassEditor. No se borra lo que ya hubiera en esos campos.
     """
     for atributo, linea in (("preMel", _MEL_ANTES), ("postMel", _MEL_DESPUES)):
         plug = "defaultRenderGlobals." + atributo
@@ -221,7 +221,7 @@ def _materiales_arnold():
                 cmds.setAttr(hierba + "." + atributo, valor)
         if cmds.attributeQuery("sheenColor", node=hierba, exists=True):
             cmds.setAttr(hierba + ".sheenColor", 0.75, 0.85, 0.55, type="double3")
-    clay = "pradera_clay_ai"
+    clay = "grasseditor_clay_ai"
     if not cmds.objExists(clay):
         clay = cmds.shadingNode("aiStandardSurface", asShader=True, name=clay)
         cmds.setAttr(clay + ".baseColor", 0.55, 0.53, 0.5, type="double3")
@@ -230,8 +230,8 @@ def _materiales_arnold():
         cmds.setAttr(clay + ".thinWalled", 1)
 
 
-SUELO_MATERIAL = "pradera_suelo"
-SUELO_SG = "pradera_suelo_SG"
+SUELO_MATERIAL = "grasseditor_suelo"
+SUELO_SG = "grasseditor_suelo_SG"
 COLOR_SUELO = (0.075, 0.095, 0.04)   # verde oscuro, casi tierra: disimula los huecos entre matas
 
 
@@ -242,7 +242,7 @@ def tenir_suelo(suelo_tr, color=None):
     cambiar o quitar como cualquier otro. Un paso de Ctrl+Z.
     """
     color = tuple(color or COLOR_SUELO)
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_tenir_suelo")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_tenir_suelo")
     try:
         if not cmds.objExists(SUELO_SG):
             lambert = cmds.shadingNode("lambert", asShader=True, name=SUELO_MATERIAL)
@@ -280,10 +280,10 @@ def fijar_material(material, translucidez=None):
         return material
     _materiales_arnold()
     if cmds.attributeQuery("aiSurfaceShader", node=SG, exists=True):
-        origen = (MATERIAL + "_ai" if material == "hierba" else "pradera_clay_ai") + ".outColor"
+        origen = (MATERIAL + "_ai" if material == "hierba" else "grasseditor_clay_ai") + ".outColor"
         _conectar(origen, SG + ".aiSurfaceShader")
     cmds.setAttr(MATERIAL + "_ai.subsurface", float(cmds.getAttr(AJUSTES + ".translucidez")))
-    for forma in cmds.ls("pradera_*_v*_n*Shape", type="mesh", long=True) or []:
+    for forma in cmds.ls("grasseditor_*_v*_n*Shape", type="mesh", long=True) or []:
         cmds.setAttr(forma + ".displayColors", 1 if material == "hierba" else 0)
     return material
 
@@ -291,16 +291,16 @@ def fijar_material(material, translucidez=None):
 # --- prototipos ----------------------------------------------------------------------------
 
 def _grupo_tipo(clave):
-    return "|{}|{}|pradera_{}".format(RAIZ, PROTOTIPOS, clave)
+    return "|{}|{}|grasseditor_{}".format(RAIZ, PROTOTIPOS, clave)
 
 
 def nombre_prototipo(clave, variante, nivel):
-    return "pradera_{}_v{}_n{}".format(clave, variante, nivel)
+    return "grasseditor_{}_v{}_n{}".format(clave, variante, nivel)
 
 
 def _firma(tipo):
-    import pradera
-    return json.dumps([tipo.a_dict(), pradera.__version__], sort_keys=True)
+    import grasseditor
+    return json.dumps([tipo.a_dict(), grasseditor.__version__], sort_keys=True)
 
 
 def _crear_malla(malla, transform, lineal):
@@ -343,7 +343,7 @@ def prototipos(clave, cat=None):
         asegurar_materiales()
         grupo = _grupo_tipo(clave)
         if not cmds.objExists(grupo):
-            cmds.group(empty=True, parent="|{}|{}".format(RAIZ, PROTOTIPOS), name="pradera_" + clave)
+            cmds.group(empty=True, parent="|{}|{}".format(RAIZ, PROTOTIPOS), name="grasseditor_" + clave)
         if not cmds.attributeQuery(ATRIBUTO_FIRMA, node=grupo, exists=True):
             cmds.addAttr(grupo, longName=ATRIBUTO_FIRMA, dataType="string")
         firma = _firma(tipo)
@@ -372,7 +372,7 @@ def prototipos(clave, cat=None):
 def triangulos_prototipos():
     """Triángulos de todos los prototipos de la escena (la geometría que se guarda de verdad)."""
     total = 0
-    for forma in cmds.ls("pradera_*_v*_n*Shape", type="mesh") or []:
+    for forma in cmds.ls("grasseditor_*_v*_n*Shape", type="mesh") or []:
         total += cmds.polyEvaluate(forma, triangle=True)
     return total
 
@@ -393,7 +393,7 @@ def guardar_ajustes(capa, nuevos, reconectar=None):
     viejos = ajustes(capa)
     if reconectar is None:
         reconectar = viejos.claves() != nuevos.claves()
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_ajustes")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_ajustes")
     try:
         if reconectar:
             for clave in nuevos.claves():
@@ -499,9 +499,9 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
     forma, suelo_tr = _forma_y_transform(suelo_tr)
     if forma is None:
         raise ValueError(t("error_sin_malla"))
-    nombre = nombre_libre(nombre_valido(nombre or "pradera_capa"))
+    nombre = nombre_libre(nombre_valido(nombre or "grasseditor_capa"))
     mezcla = mezcla or [["silvestre", 100.0]]
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_crear_capa")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_crear_capa")
     try:
         asegurar_raiz()
         asegurar_ajustes()
@@ -523,7 +523,7 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
                             semilla=semilla if semilla is not None else (len(capas()) * 7 + 1))
         cmds.setAttr(nodo + ".ajustes", aj.a_json(), type="string")
         if zona == "pincel":
-            from pradera.mascara import Mascara
+            from grasseditor.mascara import Mascara
             caja = leer_suelo(forma, None).caja_local()
             cmds.setAttr(nodo + ".mascara", Mascara(caja, 0).a_texto(), type="string")
         instancias = cmds.createNode("instancer", name=nombre + "_instancias", parent="|" + RAIZ)
@@ -543,7 +543,7 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
 
 
 def borrar_capa(capa):
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_borrar_capa")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_borrar_capa")
     try:
         # Al borrar el instanciador Maya puede llevarse también el nodo (su historia)
         for nodo in (instanciador(capa), capa):
@@ -675,7 +675,7 @@ def informe(capa):
 
 def informe_escena():
     """Suma de todas las capas, con los prototipos contados una vez."""
-    from pradera import estadisticas as est
+    from grasseditor import estadisticas as est
     total = est.Informe()
     for capa in capas():
         datos = informe(capa)
@@ -692,7 +692,7 @@ def informe_escena():
 
 def hornear(capa):
     """Congela las matas de la capa: no se recalculan al abrir la escena (un paso de Ctrl+Z)."""
-    from pradera import capa as modulo
+    from grasseditor import capa as modulo
     motor = modulo.Motor()
     forma = forma_suelo(capa)
     matriz = cmds.getAttr(forma + ".worldMatrix[0]") if forma else None

@@ -16,7 +16,7 @@ import math
 import maya.api.OpenMaya as om
 from maya import cmds
 
-from pradera import escena, pincel
+from grasseditor import escena, pincel
 
 ANCHO, FONDO = 4000.0, 2500.0     # cm
 
@@ -30,7 +30,7 @@ def altura(x, z):
 
 def _terreno():
     plano = cmds.polyPlane(width=ANCHO, height=FONDO, subdivisionsX=80, subdivisionsY=50,
-                           name="pradera_ejemplo_suelo")[0]
+                           name="grasseditor_ejemplo_suelo")[0]
     sel = om.MSelectionList()
     sel.add(plano)
     fn = om.MFnMesh(sel.getDagPath(0))
@@ -46,13 +46,13 @@ def _terreno():
 def _camino():
     puntos = [(-2000, 0, -100), (-900, 0, 300), (300, 0, -350), (1300, 0, 150), (2000, 0, 450)]
     puntos = [(x, altura(x, z) + 2, z) for x, _, z in puntos]
-    return cmds.curve(degree=3, editPoint=puntos, name="pradera_ejemplo_camino")
+    return cmds.curve(degree=3, editPoint=puntos, name="grasseditor_ejemplo_camino")
 
 
 def _parterre():
     x, z = 350.0, 700.0   # a la vista de la cámara de ejemplo
     curva = cmds.circle(normal=(0, 1, 0), radius=260, center=(x, altura(x, z) + 2, z), sections=16,
-                        name="pradera_ejemplo_parterre")[0]
+                        name="grasseditor_ejemplo_parterre")[0]
     cmds.delete(curva, constructionHistory=True)
     return curva
 
@@ -61,7 +61,7 @@ def _piedras():
     piedras = []
     for i, (x, z, r) in enumerate(((-400, 650, 90), (-250, 760, 55), (1500, 200, 130))):
         piedra = cmds.polySphere(radius=r, subdivisionsAxis=10, subdivisionsHeight=7,
-                                 name="pradera_ejemplo_piedra{}".format(i + 1))[0]
+                                 name="grasseditor_ejemplo_piedra{}".format(i + 1))[0]
         cmds.setAttr(piedra + ".scaleY", 0.6)
         cmds.move(x, altura(x, z) + r * 0.25, z, piedra)
         cmds.addAttr(piedra, longName=escena.ATRIBUTO_CANTERA, attributeType="bool", defaultValue=True)
@@ -71,10 +71,10 @@ def _piedras():
 
 def _arbol():
     x, z = -700.0, -500.0
-    grupo = cmds.group(empty=True, name="pradera_ejemplo_arbol")
-    tronco = cmds.polyCylinder(radius=22, height=420, name="pradera_ejemplo_tronco")[0]
+    grupo = cmds.group(empty=True, name="grasseditor_ejemplo_arbol")
+    tronco = cmds.polyCylinder(radius=22, height=420, name="grasseditor_ejemplo_tronco")[0]
     cmds.move(0, 210, 0, tronco)
-    copa = cmds.polySphere(radius=300, name="pradera_ejemplo_copa")[0]
+    copa = cmds.polySphere(radius=300, name="grasseditor_ejemplo_copa")[0]
     cmds.setAttr(copa + ".scaleY", 0.7)
     cmds.move(0, 520, 0, copa)
     cmds.parent(tronco, copa, grupo)
@@ -85,8 +85,8 @@ def _arbol():
 
 
 def _camara():
-    camara, forma = cmds.camera(name="pradera_ejemplo_camara", focalLength=30)
-    camara = cmds.rename(camara, "pradera_ejemplo_camara")
+    camara, forma = cmds.camera(name="grasseditor_ejemplo_camara", focalLength=30)
+    camara = cmds.rename(camara, "grasseditor_ejemplo_camara")
     forma = cmds.listRelatives(camara, shapes=True, fullPath=True)[0]
     cmds.xform(camara, worldSpace=True, translation=(-150, 210, 1550), rotation=(-7, -8, 0))
     for otra in cmds.ls(type="camera"):
@@ -96,12 +96,12 @@ def _camara():
 
 
 def _luces():
-    sol = cmds.directionalLight(name="pradera_ejemplo_sol", intensity=2.5)
+    sol = cmds.directionalLight(name="grasseditor_ejemplo_sol", intensity=2.5)
     sol = cmds.listRelatives(sol, parent=True)[0]
     cmds.xform(sol, rotation=(-40, 35, 0))
     try:
         if escena._arnold():
-            cielo = cmds.shadingNode("aiSkyDomeLight", asLight=True, name="pradera_ejemplo_cielo")
+            cielo = cmds.shadingNode("aiSkyDomeLight", asLight=True, name="grasseditor_ejemplo_cielo")
             forma = cmds.listRelatives(cielo, shapes=True)[0] if cmds.nodeType(cielo) == "transform" else cielo
             cmds.setAttr(forma + ".color", 0.75, 0.85, 1.0, type="double3")
             cmds.setAttr(forma + ".intensity", 0.8)
@@ -118,13 +118,13 @@ def jardin_con_loma(nueva_escena=False):
     """Construye la escena de ejemplo y devuelve sus tres capas."""
     if nueva_escena:
         cmds.file(new=True, force=True)
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_ejemplo")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_ejemplo")
     try:
         suelo = _terreno()
         camino = escena.puntos_de_curva(_camino())
-        camino.update(modo="fuera", ancho=160.0, nombre="pradera_ejemplo_camino", cerrada=False)
+        camino.update(modo="fuera", ancho=160.0, nombre="grasseditor_ejemplo_camino", cerrada=False)
         parterre = escena.puntos_de_curva(_parterre())
-        parterre.update(nombre="pradera_ejemplo_parterre")
+        parterre.update(nombre="grasseditor_ejemplo_parterre")
         _piedras()
         _arbol()
         camara = _camara()

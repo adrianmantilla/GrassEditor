@@ -1,4 +1,4 @@
-"""Ventana de Pradera: cuatro pestañas en el orden en que se trabaja.
+"""Ventana de GrassEditor: cuatro pestañas en el orden en que se trabaja.
 
 1 · Zonas        dónde crece la capa: todo el suelo, pincel, reglas, curvas y objetos
 2 · Hierba       la mezcla de tipos, la densidad y el editor de matas
@@ -15,9 +15,9 @@ try:
 except ImportError:  # Maya anterior a 2025
     from PySide2 import QtCore, QtWidgets
 
-from pradera import escena, pincel, tipos
-from pradera import estadisticas as est
-from pradera.i18n import t
+from grasseditor import escena, pincel, tipos
+from grasseditor import estadisticas as est
+from grasseditor.i18n import t
 
 _ventana = None
 _COLORES = {"verde": "#3fa34d", "ambar": "#e0b000", "rojo": "#d64541"}
@@ -43,7 +43,7 @@ class Ventana(QtWidgets.QDialog):
     def __init__(self, padre=None):
         super(Ventana, self).__init__(padre or _ventana_maya())
         self.setWindowTitle(t("ventana_titulo"))
-        self.setObjectName("PraderaVentana")
+        self.setObjectName("GrassEditorVentana")
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.Tool)
         self.resize(460, 720)
         self._cargando = False
@@ -348,7 +348,7 @@ class Ventana(QtWidgets.QDialog):
 
     def mensaje(self, texto):
         self.estado.setText(texto)
-        print("Pradera | " + texto)
+        print("GrassEditor | " + texto)
 
     def refrescar(self):
         """Vuelve a leer la escena: capas, cámaras, tipos y cifras."""
@@ -697,7 +697,7 @@ class Ventana(QtWidgets.QDialog):
                 caja.setValue(getattr(tipo, campo))
         finally:
             self._cargando = False
-        from pradera.capa import triangulos_tipo
+        from grasseditor.capa import triangulos_tipo
         tris = triangulos_tipo(tipo)
         self.etiqueta_tris_tipo.setText(t("tris_tipo", completa=tris[0], simple=tris[1], tarjeta=tris[2]))
 
@@ -761,7 +761,7 @@ class Ventana(QtWidgets.QDialog):
                 valores = dict(valores, tipo=_nombre_tipo(valores["tipo"]))
             lineas.append("• " + t(clave, **valores))
         texto = "\n".join(lineas)
-        print("Pradera |\n" + texto)
+        print("GrassEditor |\n" + texto)
         cmds.confirmDialog(title=t("boton_analizar"), message=texto, button=[t("boton_aceptar")])
 
     def _hornear(self):
@@ -800,7 +800,7 @@ class Ventana(QtWidgets.QDialog):
                                   defaultButton=no, cancelButton=no, dismissString=no) == si
 
     def _sueltas(self):
-        from pradera import convertir
+        from grasseditor import convertir
         capa = self.capa()
         if not capa:
             return
@@ -811,7 +811,7 @@ class Ventana(QtWidgets.QDialog):
         self.mensaje(t("sueltas_hecho", grupo=grupo))
 
     def _unir(self):
-        from pradera import convertir
+        from grasseditor import convertir
         capa = self.capa()
         if not capa:
             return
@@ -822,7 +822,7 @@ class Ventana(QtWidgets.QDialog):
         self.mensaje(t("unir_hecho", malla=malla))
 
     def _exportar_puntos(self):
-        from pradera import convertir
+        from grasseditor import convertir
         capa = self.capa()
         if not capa:
             return
@@ -833,7 +833,7 @@ class Ventana(QtWidgets.QDialog):
             self.mensaje(t("exportado_puntos", matas=est.miles(n), ruta=ruta[0]))
 
     def _exportar_fbx(self):
-        from pradera import convertir
+        from grasseditor import convertir
         capa = self.capa()
         if not capa:
             return

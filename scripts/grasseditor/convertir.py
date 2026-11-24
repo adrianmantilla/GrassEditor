@@ -19,8 +19,8 @@ import math
 import maya.api.OpenMaya as om
 from maya import cmds
 
-from pradera import escena, matas
-from pradera.tipos import NIVELES, PROTOTIPOS_POR_TIPO
+from grasseditor import escena, matas
+from grasseditor.tipos import NIVELES, PROTOTIPOS_POR_TIPO
 
 AVISO_SUELTAS = 5000
 AVISO_TRIANGULOS = 2000000
@@ -28,8 +28,8 @@ AVISO_TRIANGULOS = 2000000
 
 def salida_render(capa):
     """La salida de render de la capa (camara.Salida) y las claves de su mezcla."""
-    from pradera import camara as cam
-    from pradera import capa as cp
+    from grasseditor import camara as cam
+    from grasseditor import capa as cp
     motor = cp.Motor()
     forma = escena.forma_suelo(capa)
     matriz = cmds.getAttr(forma + ".worldMatrix[0]")
@@ -66,7 +66,7 @@ def instancias_sueltas(capa):
     s, claves = salida_render(capa)
     grupo = cmds.group(empty=True, world=True, name=capa + "_sueltas")
     cat = escena.catalogo()
-    cmds.undoInfo(openChunk=True, chunkName="Pradera_sueltas")
+    cmds.undoInfo(openChunk=True, chunkName="GrassEditor_sueltas")
     try:
         rutas = {c: escena.prototipos(c, cat) for c in claves}
         for i in range(len(s)):
@@ -88,7 +88,7 @@ def instancias_sueltas(capa):
 def triangulos_render(capa):
     s, claves = salida_render(capa)
     cat = escena.catalogo()
-    from pradera.capa import triangulos_tipo
+    from grasseditor.capa import triangulos_tipo
     tris = {c: triangulos_tipo(cat[c]) for c in claves}
     return sum(tris[claves[_descomponer(i)[0]]][_descomponer(i)[2]] for i in s.indices)
 
