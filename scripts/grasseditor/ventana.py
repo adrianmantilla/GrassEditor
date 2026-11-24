@@ -15,7 +15,8 @@ try:
 except ImportError:  # Maya anterior a 2025
     from PySide2 import QtCore, QtWidgets
 
-from grasseditor import escena, pincel, tipos
+import grasseditor
+from grasseditor import escena, estilo, pincel, tipos
 from grasseditor import estadisticas as est
 from grasseditor.i18n import t
 
@@ -43,7 +44,7 @@ class Ventana(QtWidgets.QDialog):
     def __init__(self, padre=None):
         super(Ventana, self).__init__(padre or _ventana_maya())
         self.setWindowTitle(t("ventana_titulo"))
-        self.setObjectName("GrassEditorVentana")
+        estilo.aplicar(self, "GrassEditorVentana")
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.Tool)
         self.resize(460, 720)
         self._cargando = False
@@ -97,13 +98,20 @@ class Ventana(QtWidgets.QDialog):
         return fila
 
     def _construir(self):
-        capa = QtWidgets.QVBoxLayout(self)
+        exterior = QtWidgets.QVBoxLayout(self)
+        exterior.setContentsMargins(0, 0, 0, 0)
+        exterior.setSpacing(0)
+        cabecera, _ = estilo.cabecera("GrassEditor", estilo.COLORES["grasseditor"], grasseditor.__version__)
+        exterior.addWidget(cabecera)
+        capa = QtWidgets.QVBoxLayout()
+        capa.setContentsMargins(10, 8, 10, 8)
+        exterior.addLayout(capa, 1)
         # Capa activa
         self.combo_capa = QtWidgets.QComboBox()
         self.combo_capa.setToolTip(t("ayuda_combo_capa"))
         self.combo_capa.currentIndexChanged.connect(lambda *_: self._si_no_carga(self.cargar_capa))
         capa.addLayout(self._fila(t("etiqueta_capa"), self.combo_capa))
-        capa.addLayout(self._fila(self._boton("boton_nueva_capa", self._nueva_capa),
+        capa.addLayout(self._fila(estilo.primario(self._boton("boton_nueva_capa", self._nueva_capa)),
                                   self._boton("boton_nueva_pincel", lambda: self._nueva_capa("pincel")),
                                   self._boton("boton_duplicar", self._duplicar),
                                   self._boton("boton_borrar_capa", self._borrar)))
@@ -111,7 +119,7 @@ class Ventana(QtWidgets.QDialog):
         self.casilla_activa.setToolTip(t("ayuda_casilla_activa"))
         self.casilla_activa.toggled.connect(lambda v: self._cambiar(activa=bool(v)))
         self.etiqueta_suelo = QtWidgets.QLabel()
-        self.etiqueta_suelo.setStyleSheet("color: gray;")
+        estilo.rol(self.etiqueta_suelo, "tenue")
         capa.addLayout(self._fila(self.casilla_activa, None, self.etiqueta_suelo))
 
         self.pestanas = QtWidgets.QTabWidget()
@@ -126,7 +134,7 @@ class Ventana(QtWidgets.QDialog):
         self.semaforo.setToolTip(t("ayuda_semaforo"))
         capa.addWidget(self.semaforo)
         self.estado = QtWidgets.QLabel()
-        self.estado.setStyleSheet("color: gray;")
+        estilo.rol(self.estado, "tenue")
         self.estado.setWordWrap(True)
         capa.addWidget(self.estado)
 
@@ -249,7 +257,7 @@ class Ventana(QtWidgets.QDialog):
             rejilla.addWidget(caja_num, i // 2, (i % 2) * 2 + 1)
         c.addLayout(rejilla)
         self.etiqueta_tris_tipo = QtWidgets.QLabel()
-        self.etiqueta_tris_tipo.setStyleSheet("color: gray;")
+        estilo.rol(self.etiqueta_tris_tipo, "tenue")
         c.addWidget(self.etiqueta_tris_tipo)
         c.addLayout(self._fila(self._boton("boton_aplicar_tipo", self._aplicar_tipo),
                                self._boton("boton_serie_tipo", self._serie_tipo),

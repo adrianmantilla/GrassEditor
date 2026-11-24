@@ -5,6 +5,7 @@ import platform
 from maya import cmds
 
 import grasseditor
+from grasseditor import pack
 from grasseditor.i18n import t
 
 MENU = "GrassEditorMenu"
@@ -81,8 +82,7 @@ def _acerca():
 
 
 def crear_menu():
-    quitar_menu()
-    cmds.menu(MENU, parent="MayaWindow", label=t("menu_titulo"), tearOff=True)
+    pack.crear_menu(MENU, t("menu_titulo"))
     cmds.menuItem(label=t("menu_ventana"), command=lambda *_: _ventana())
     cmds.menuItem(divider=True)
     cmds.menuItem(label=t("menu_nueva_capa"), command=lambda *_: _nueva_capa())
@@ -98,8 +98,7 @@ def crear_menu():
 
 
 def quitar_menu():
-    if cmds.menu(MENU, exists=True):
-        cmds.deleteUI(MENU)
+    pack.quitar_menu(MENU)
 
 
 def iniciar():
