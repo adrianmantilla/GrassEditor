@@ -50,8 +50,8 @@ def _camino():
 
 
 def _parterre():
-    x, z = -1300.0, 800.0
-    curva = cmds.circle(normal=(0, 1, 0), radius=280, center=(x, altura(x, z) + 2, z), sections=16,
+    x, z = 350.0, 700.0   # a la vista de la cámara de ejemplo
+    curva = cmds.circle(normal=(0, 1, 0), radius=260, center=(x, altura(x, z) + 2, z), sections=16,
                         name="pradera_ejemplo_parterre")[0]
     cmds.delete(curva, constructionHistory=True)
     return curva

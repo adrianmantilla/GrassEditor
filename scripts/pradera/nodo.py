@@ -115,10 +115,12 @@ class NodoCapa(mpx.MPxNode):
                           datos.inputValue(NodoCapa.aspecto).asFloat())
 
     def _en_render(self, datos):
+        if datos.inputValue(NodoCapa.enRender).asBool():
+            return True   # renderizando: siempre calidad de render, también en modo «visor»
         modo = datos.inputValue(NodoCapa.modo).asShort()
         if modo == 1:
             return False
-        if modo == 2 or datos.inputValue(NodoCapa.enRender).asBool():
+        if modo == 2:
             return True
         return om.MGlobal.mayaState() != om.MGlobal.kInteractive
 

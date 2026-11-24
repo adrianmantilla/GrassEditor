@@ -268,6 +268,11 @@ class Reparto(unittest.TestCase):
         acept = reparto.aceptados(cand, None, reparto.Reglas(curvas=[dentro], borde=1))
         self.assertTrue(all(abs(cand.x[i]) <= 210 and abs(cand.z[i]) <= 210 for i in acept))
         self.assertAlmostEqual(len(acept) / total, 0.16, delta=0.02)
+        # Con un borde ancho el parterre conserva su área: la transición va mitad dentro, mitad fuera
+        circulo = {"puntos": [(200 * math.cos(a * math.pi / 25), 200 * math.sin(a * math.pi / 25))
+                              for a in range(50)], "cerrada": True, "modo": "dentro"}
+        acept = reparto.aceptados(cand, None, reparto.Reglas(curvas=[circulo], borde=40))
+        self.assertAlmostEqual(len(acept) / (total * math.pi * 200 ** 2 / 1e6), 1.0, delta=0.06)
         fuera = dict(dentro, modo="fuera")
         acept = reparto.aceptados(cand, None, reparto.Reglas(curvas=[fuera], borde=1))
         self.assertAlmostEqual(len(acept) / total, 0.84, delta=0.02)

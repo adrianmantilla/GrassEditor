@@ -354,19 +354,28 @@ def guardar_ajustes(capa, nuevos, reconectar=None):
     viejos = ajustes(capa)
     if reconectar is None:
         reconectar = viejos.claves() != nuevos.claves()
-    if reconectar:
-        for clave in nuevos.claves():
-            prototipos(clave)
-    cmds.setAttr(capa + ".ajustes", nuevos.a_json(), type="string")
-    if reconectar:
-        _sin_deshacer(lambda: reconectar_prototipos(capa))
-    instancias = instanciador(capa)
-    if instancias:
-        cmds.setAttr(instancias + ".visibility", 1 if nuevos.activa else 0)
-        if cmds.attributeQuery("levelOfDetail", node=instancias, exists=True):
-            cmds.setAttr(instancias + ".levelOfDetail",
-                         1 if nuevos.opciones.get("visor_como") == "cajas" else 0)
+    cmds.undoInfo(openChunk=True, chunkName="Pradera_ajustes")
+    try:
+        if reconectar:
+            for clave in nuevos.claves():
+                prototipos(clave)
+        cmds.setAttr(capa + ".ajustes", nuevos.a_json(), type="string")
+        if reconectar:
+            _sin_deshacer(lambda: reconectar_prototipos(capa))
+        instancias = instanciador(capa)
+        if instancias:
+            _fijar_si_cambia(instancias + ".visibility", 1 if nuevos.activa else 0)
+            if cmds.attributeQuery("levelOfDetail", node=instancias, exists=True):
+                _fijar_si_cambia(instancias + ".levelOfDetail",
+                                 1 if nuevos.opciones.get("visor_como") == "cajas" else 0)
+    finally:
+        cmds.undoInfo(closeChunk=True)
     return nuevos
+
+
+def _fijar_si_cambia(atributo, valor):
+    if cmds.getAttr(atributo) != valor:
+        cmds.setAttr(atributo, valor)
 
 
 def instanciador(capa):
@@ -497,10 +506,10 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
 def borrar_capa(capa):
     cmds.undoInfo(openChunk=True, chunkName="Pradera_borrar_capa")
     try:
-        instancias = instanciador(capa)
-        if instancias:
-            cmds.delete(instancias)
-        cmds.delete(capa)
+        # Al borrar el instanciador Maya puede llevarse también el nodo (su historia)
+        for nodo in (instanciador(capa), capa):
+            if nodo and cmds.objExists(nodo):
+                cmds.delete(nodo)
     finally:
         cmds.undoInfo(closeChunk=True)
 

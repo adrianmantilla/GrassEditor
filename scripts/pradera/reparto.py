@@ -367,12 +367,12 @@ class Campo(object):
         f = array("f", [0.0]) * n
         if cerrada:
             dentro = self._dentro(puntos)
+            # Transición centrada en la curva (mitad dentro, mitad fuera): el área
+            # con hierba es la de la curva, como esperaría quien la dibuja.
+            signo = 1.0 if modo == "dentro" else -1.0
             for i in range(n):
-                suave = min(1.0, d[i] / borde)
-                if modo == "dentro":
-                    f[i] = suave if dentro[i] else 0.0
-                else:
-                    f[i] = 0.0 if dentro[i] else suave
+                s = d[i] if dentro[i] else -d[i]
+                f[i] = min(1.0, max(0.0, 0.5 + signo * s / borde))
         else:
             for i in range(n):
                 fuera = 0.0 if d[i] < media else min(1.0, (d[i] - media) / borde)
