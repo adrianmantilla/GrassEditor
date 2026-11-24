@@ -491,7 +491,7 @@ def nombre_libre(base):
 
 
 def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", opciones=None, reglas=None,
-               densidad=100.0, semilla=None):
+               densidad=None, semilla=None):
     """Crea una capa de hierba sobre ``suelo_tr`` (un paso de Ctrl+Z). Devuelve el nodo.
 
     ``zona``: «objeto» (todo el suelo) o «pincel» (empieza vacía para pintar).
@@ -500,7 +500,10 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
     if forma is None:
         raise ValueError(t("error_sin_malla"))
     nombre = nombre_libre(nombre_valido(nombre or "grasseditor_capa"))
-    mezcla = mezcla or [["silvestre", 100.0]]
+    from grasseditor import preferencias
+    mezcla = mezcla or [[preferencias.leer("tipo_inicial"), 100.0]]
+    if densidad is None:
+        densidad = float(preferencias.leer("densidad_inicial"))
     cmds.undoInfo(openChunk=True, chunkName="GrassEditor_crear_capa")
     try:
         asegurar_raiz()
@@ -536,7 +539,8 @@ def crear_capa(suelo_tr, caras=None, nombre=None, mezcla=None, zona="objeto", op
         camara = camara_render()
         if camara:
             conectar_camara(nodo, camara)
-        instalar_ganchos()
+        if preferencias.leer("render_automatico"):
+            instalar_ganchos()
     finally:
         cmds.undoInfo(closeChunk=True)
     return nodo
